@@ -1,12 +1,20 @@
 import type { ReactNode } from "react"
 import Link from "next/link"
+
+import { AuthShowcase } from "@/components/auth/auth-showcase"
 import { Logo } from "@/components/logo"
 
-type AuthLayoutProps = {
+type AuthLayoutShellProps = {
   children: ReactNode
+  title: string
+  description: string
 }
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export function AuthLayoutShell({
+  children,
+  title,
+  description,
+}: AuthLayoutShellProps) {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
@@ -21,11 +29,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
-        <img
-          src="/auth-pic.png"
-          alt="Authentication background"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
+        <AuthShowcase title={title} description={description} />
       </div>
     </div>
   )
