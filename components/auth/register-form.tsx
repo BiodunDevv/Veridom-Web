@@ -4,22 +4,20 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
-import { Loader2, UserRoundPlus } from "lucide-react"
+import { AtSign, Lock, Phone, UserRound, UserRoundPlus } from "lucide-react"
 import { toast } from "sonner"
 
 import { authApi } from "@/lib/api/auth"
 import { getApiErrorMessage } from "@/lib/api/client"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
 import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+  AuthButton,
+  AuthFooterText,
+  AuthHeading,
+  AuthInput,
+  AuthNotice,
+  authLinkClass,
+} from "@/components/auth/auth-ui"
+import { cn } from "@/lib/utils"
 
 type RegisterValues = {
   role: "TENANT" | "LANDLORD"
@@ -41,10 +39,7 @@ const initialValues: RegisterValues = {
   confirmPassword: "",
 }
 
-export function RegisterForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
+export function RegisterForm() {
   const router = useRouter()
   const [values, setValues] = React.useState(initialValues)
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
@@ -106,133 +101,108 @@ export function RegisterForm({
   const isPending = registerMutation.isPending
 
   return (
-    <form
-      className={cn("flex flex-col gap-6", className)}
-      onSubmit={handleSubmit}
-      {...props}
-    >
-      <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Create your account</h1>
-          <p className="text-sm text-balance text-muted-foreground">
-            Join Veridom as a tenant or landlord with the same secure account flow.
-          </p>
-        </div>
+    <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+      <AuthHeading
+        title="Create your account"
+        description="Join Veridom as a tenant or landlord."
+      />
 
+      <div className="flex flex-col gap-3">
         {errorMessage ? (
-          <Alert variant="destructive">
-            <UserRoundPlus className="size-4" />
-            <AlertTitle>Registration failed</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
+          <AuthNotice tone="error" icon={UserRoundPlus} title="Registration failed">
+            {errorMessage}
+          </AuthNotice>
         ) : null}
 
-        <Field>
-          <FieldLabel htmlFor="role">Account type</FieldLabel>
-          <Select value={values.role} onValueChange={(value) => updateValue("role", value)}>
-            <SelectTrigger id="role" className="h-10 w-full bg-background">
-              <SelectValue placeholder="Select account type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="TENANT">Tenant</SelectItem>
-              <SelectItem value="LANDLORD">Landlord</SelectItem>
-            </SelectContent>
-          </Select>
-          <FieldDescription>
-            Landlords and tenants use the same verified account system.
-          </FieldDescription>
-        </Field>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor="firstName">First name</FieldLabel>
-            <Input
-              id="firstName"
-              value={values.firstName}
-              onChange={(event) => updateValue("firstName", event.target.value)}
-              autoComplete="given-name"
-              className="bg-background"
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="lastName">Last name</FieldLabel>
-            <Input
-              id="lastName"
-              value={values.lastName}
-              onChange={(event) => updateValue("lastName", event.target.value)}
-              autoComplete="family-name"
-              className="bg-background"
-            />
-          </Field>
+        <div
+          role="radiogroup"
+          aria-label="Account type"
+          className="grid grid-cols-2 gap-1 rounded-xl border border-input bg-muted/60 p-1"
+        >
+          {(["TENANT", "LANDLORD"] as const).map((role) => (
+            <button
+              key={role}
+              type="button"
+              role="radio"
+              aria-checked={values.role === role}
+              onClick={() => updateValue("role", role)}
+              className={cn(
+                "h-9 rounded-lg text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-foreground/20",
+                values.role === role
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-foreground/55 hover:text-foreground",
+              )}
+            >
+              {role === "TENANT" ? "Tenant" : "Landlord"}
+            </button>
+          ))}
         </div>
 
-        <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input
-            id="email"
-            type="email"
-            value={values.email}
-            onChange={(event) => updateValue("email", event.target.value)}
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="bg-background"
+        <div className="grid gap-3 sm:grid-cols-2">
+          <AuthInput
+            id="firstName"
+            icon={UserRound}
+            label="First name"
+            value={values.firstName}
+            onChange={(event) => updateValue("firstName", event.target.value)}
+            autoComplete="given-name"
           />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="phone">Phone number</FieldLabel>
-          <Input
-            id="phone"
-            type="tel"
-            value={values.phone}
-            onChange={(event) => updateValue("phone", event.target.value)}
-            autoComplete="tel"
-            placeholder="+2348012345678"
-            className="bg-background"
+          <AuthInput
+            id="lastName"
+            icon={UserRound}
+            label="Last name"
+            value={values.lastName}
+            onChange={(event) => updateValue("lastName", event.target.value)}
+            autoComplete="family-name"
           />
-          <FieldDescription>Optional, but useful for account recovery later.</FieldDescription>
-        </Field>
+        </div>
+        <AuthInput
+          id="email"
+          type="email"
+          icon={AtSign}
+          label="Enter your email address"
+          value={values.email}
+          onChange={(event) => updateValue("email", event.target.value)}
+          autoComplete="email"
+        />
+        <AuthInput
+          id="phone"
+          type="tel"
+          icon={Phone}
+          label="Phone number (optional)"
+          value={values.phone}
+          onChange={(event) => updateValue("phone", event.target.value)}
+          autoComplete="tel"
+        />
+        <AuthInput
+          id="password"
+          type="password"
+          icon={Lock}
+          label="Create a password"
+          value={values.password}
+          onChange={(event) => updateValue("password", event.target.value)}
+          autoComplete="new-password"
+        />
+        <AuthInput
+          id="confirmPassword"
+          type="password"
+          icon={Lock}
+          label="Confirm password"
+          value={values.confirmPassword}
+          onChange={(event) => updateValue("confirmPassword", event.target.value)}
+          autoComplete="new-password"
+        />
+        <AuthButton type="submit" loading={isPending}>
+          Create account
+        </AuthButton>
+      </div>
 
-        <Field>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
-          <Input
-            id="password"
-            type="password"
-            value={values.password}
-            onChange={(event) => updateValue("password", event.target.value)}
-            autoComplete="new-password"
-            className="bg-background"
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="confirmPassword">Confirm password</FieldLabel>
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={values.confirmPassword}
-            onChange={(event) =>
-              updateValue("confirmPassword", event.target.value)
-            }
-            autoComplete="new-password"
-            className="bg-background"
-          />
-        </Field>
-
-        <Field>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Create account
-          </Button>
-        </Field>
-
-        <FieldDescription className="text-center">
-          Already have an account?{" "}
-          <Link href="/auth/login" className="underline underline-offset-4">
-            Sign in
-          </Link>
-        </FieldDescription>
-      </FieldGroup>
+      <AuthFooterText>
+        Already have an account?{" "}
+        <Link href="/auth/login" className={authLinkClass}>
+          Sign in
+        </Link>
+      </AuthFooterText>
     </form>
   )
 }

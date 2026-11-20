@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Logo } from "@/components/logo"
+import { ThemeToggleButton } from "@/components/theme-toggle"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -403,6 +404,7 @@ export function PublicHomePage() {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
+                <ThemeToggleButton />
                 <Badge variant={getStatusVariant(meQuery.data.status)}>
                   {meQuery.data.status.replaceAll("_", " ")}
                 </Badge>

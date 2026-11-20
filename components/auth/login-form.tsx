@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Loader2, LogIn } from "lucide-react"
+import { Lock, AtSign, ShieldAlert } from "lucide-react"
 import { toast } from "sonner"
 
 import {
@@ -16,16 +16,20 @@ import {
 import { authApi } from "@/lib/api/auth"
 import { getApiErrorMessage, isApiError } from "@/lib/api/client"
 import { useAppDispatch, useAppSelector } from "@/lib/store/store"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import {
+  AuthButton,
+  AuthDivider,
+  AuthFooterText,
+  AuthHeading,
+  AuthInput,
+  AuthNotice,
+  AuthOutlineButton,
+  GithubIcon,
+  GoogleIcon,
+  authLinkClass,
+} from "@/components/auth/auth-ui"
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
+export function LoginForm() {
   const dispatch = useAppDispatch()
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -48,7 +52,7 @@ export function LoginForm({
         dispatch(setAuthErrorCode(null))
         await queryClient.invalidateQueries({ queryKey: ["sessions"] })
         toast.success("Welcome back.")
-        router.push(redirectPath ?? "/")
+        router.push(redirectPath ?? "/account")
       } catch (error) {
         dispatch(clearAuthState())
         dispatch(
@@ -59,8 +63,7 @@ export function LoginForm({
       }
     },
     onError: (error) => {
-      const message = getApiErrorMessage(error, "Login failed.")
-      setErrorMessage(message)
+      setErrorMessage(getApiErrorMessage(error, "Login failed."))
       dispatch(
         setAuthErrorCode(isApiError(error) ? error.code : "LOGIN_FAILED"),
       )
@@ -81,78 +84,72 @@ export function LoginForm({
       return
     }
 
-    loginMutation.mutate({
-      email: email.trim(),
-      password,
-    })
+    loginMutation.mutate({ email: email.trim(), password })
   }
 
-  const isPending = loginMutation.isPending
+  const comingSoon = (provider: string) =>
+    toast.info(`${provider} sign-in isn't available yet.`)
 
   return (
-    <form
-      className={cn("flex flex-col gap-6", className)}
-      onSubmit={handleSubmit}
-      {...props}
-    >
-      <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Login to your account</h1>
-          <p className="text-sm text-balance text-muted-foreground">
-            Enter your email below to access your Veridom account.
-          </p>
-        </div>
+    <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+      <AuthHeading
+        title="Sign In or Join Now!"
+        description="Sign in or create your Veridom account to get started."
+      />
+
+      <div className="flex flex-col gap-3">
         {errorMessage ? (
-          <Alert variant="destructive">
-            <LogIn className="size-4" />
-            <AlertTitle>Could not sign you in</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
+          <AuthNotice tone="error" icon={ShieldAlert} title="Could not sign you in">
+            {errorMessage}
+          </AuthNotice>
         ) : null}
-        <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="bg-background"
-          />
-        </Field>
-        <Field>
-          <div className="flex items-center">
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Link
-              href="/auth/forgot-password"
-              className="ml-auto text-sm underline-offset-4 hover:underline"
-            >
-              Forgot your password?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-            className="bg-background"
-          />
-        </Field>
-        <Field>
-          <Button type="submit" disabled={isPending}>
-            {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-            Login
-          </Button>
-        </Field>
-        <FieldDescription className="text-center">
-          Don&apos;t have an account?{" "}
-          <Link href="/auth/register" className="underline underline-offset-4">
-            Sign up
+        <AuthInput
+          id="email"
+          type="email"
+          icon={AtSign}
+          label="Enter your email address"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          autoComplete="email"
+        />
+        <AuthInput
+          id="password"
+          type="password"
+          icon={Lock}
+          label="Enter your password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="current-password"
+        />
+        <div className="-mt-1 flex justify-end text-sm">
+          <Link href="/auth/forgot-password" className={authLinkClass}>
+            Forgot password?
           </Link>
-        </FieldDescription>
-      </FieldGroup>
+        </div>
+        <AuthButton type="submit" loading={loginMutation.isPending}>
+          Continue With Email
+        </AuthButton>
+      </div>
+
+      <AuthDivider>Or continue with</AuthDivider>
+
+      <div className="flex gap-3">
+        <AuthOutlineButton onClick={() => comingSoon("Google")}>
+          <GoogleIcon className="size-[18px]" />
+          Google
+        </AuthOutlineButton>
+        <AuthOutlineButton onClick={() => comingSoon("GitHub")}>
+          <GithubIcon className="size-[18px]" />
+          GitHub
+        </AuthOutlineButton>
+      </div>
+
+      <AuthFooterText>
+        New to Veridom?{" "}
+        <Link href="/auth/register" className={authLinkClass}>
+          Create an account
+        </Link>
+      </AuthFooterText>
     </form>
   )
 }

@@ -4,20 +4,20 @@ import * as React from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
-import { CheckCircle2, Loader2, ShieldAlert } from "lucide-react"
+import { CheckCircle2, Lock, ShieldAlert } from "lucide-react"
 
 import { authApi } from "@/lib/api/auth"
 import { getApiErrorMessage } from "@/lib/api/client"
-import { cn } from "@/lib/utils"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import {
+  AuthButton,
+  AuthFooterText,
+  AuthHeading,
+  AuthInput,
+  AuthNotice,
+  authLinkClass,
+} from "@/components/auth/auth-ui"
 
-export function ResetPasswordForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
+export function ResetPasswordForm() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token") ?? ""
   const [password, setPassword] = React.useState("")
@@ -63,93 +63,61 @@ export function ResetPasswordForm({
   }
 
   return (
-    <form
-      className={cn("flex flex-col gap-6", className)}
-      onSubmit={handleSubmit}
-      {...props}
-    >
-      <FieldGroup>
-        <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Reset your password</h1>
-          <p className="text-sm text-balance text-muted-foreground">
-            Choose a new password for your Veridom account.
-          </p>
-        </div>
+    <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
+      <AuthHeading
+        title="Reset your password"
+        description="Choose a new password for your account."
+      />
 
+      <div className="flex flex-col gap-3">
         {!token ? (
-          <Alert variant="destructive">
-            <ShieldAlert className="size-4" />
-            <AlertTitle>Reset link is incomplete</AlertTitle>
-            <AlertDescription>
-              Open the full link from your email or request a new reset link.
-            </AlertDescription>
-          </Alert>
+          <AuthNotice tone="error" icon={ShieldAlert} title="Reset link is incomplete">
+            Open the full link from your email or request a new reset link.
+          </AuthNotice>
         ) : null}
-
         {submitted ? (
-          <Alert>
-            <CheckCircle2 className="size-4" />
-            <AlertTitle>Password updated</AlertTitle>
-            <AlertDescription>
-              Your password has been reset successfully. You can sign in with
-              the new one now.
-            </AlertDescription>
-          </Alert>
+          <AuthNotice icon={CheckCircle2} title="Password updated">
+            Your password has been reset. You can sign in with the new one now.
+          </AuthNotice>
         ) : null}
-
         {errorMessage ? (
-          <Alert variant="destructive">
-            <AlertTitle>Reset failed</AlertTitle>
-            <AlertDescription>{errorMessage}</AlertDescription>
-          </Alert>
+          <AuthNotice tone="error" title="Reset failed">
+            {errorMessage}
+          </AuthNotice>
         ) : null}
+        <AuthInput
+          id="password"
+          type="password"
+          icon={Lock}
+          label="New password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="new-password"
+        />
+        <AuthInput
+          id="confirmPassword"
+          type="password"
+          icon={Lock}
+          label="Confirm new password"
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          autoComplete="new-password"
+        />
+        <AuthButton
+          type="submit"
+          loading={resetPasswordMutation.isPending}
+          disabled={submitted}
+        >
+          Save new password
+        </AuthButton>
+      </div>
 
-        <Field>
-          <FieldLabel htmlFor="password">New password</FieldLabel>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="new-password"
-            className="bg-background"
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="confirmPassword">Confirm new password</FieldLabel>
-          <Input
-            id="confirmPassword"
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            autoComplete="new-password"
-            className="bg-background"
-          />
-          <FieldDescription>
-            Resetting your password will revoke any other active sessions.
-          </FieldDescription>
-        </Field>
-
-        <Field>
-          <Button
-            type="submit"
-            disabled={resetPasswordMutation.isPending || submitted}
-          >
-            {resetPasswordMutation.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : null}
-            Save new password
-          </Button>
-        </Field>
-
-        <FieldDescription className="text-center">
-          Need a fresh reset link?{" "}
-          <Link href="/auth/forgot-password" className="underline underline-offset-4">
-            Request another email
-          </Link>
-        </FieldDescription>
-      </FieldGroup>
+      <AuthFooterText>
+        Need a fresh link?{" "}
+        <Link href="/auth/forgot-password" className={authLinkClass}>
+          Request another email
+        </Link>
+      </AuthFooterText>
     </form>
   )
 }
