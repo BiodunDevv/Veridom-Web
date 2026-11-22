@@ -4,6 +4,12 @@ import * as React from "react"
 import { Eye, EyeOff, Loader2, type LucideIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import { cn } from "@/lib/utils"
 
 export function AuthHeading({
@@ -15,7 +21,7 @@ export function AuthHeading({
 }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
-      <h1 className="text-[1.75rem] leading-tight font-semibold tracking-tight text-foreground">
+      <h1 className="text-2xl leading-tight font-semibold tracking-tight text-foreground">
         {title}
       </h1>
       <p className="text-sm text-balance text-foreground/55">{description}</p>
@@ -40,42 +46,52 @@ export function AuthInput({
   const isPassword = type === "password"
 
   return (
-    <div className="relative">
+    <div>
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
-      <Icon
-        aria-hidden
-        className="pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2 text-foreground/45"
-      />
-      <input
-        id={id}
-        type={isPassword && visible ? "text" : type}
-        placeholder={label}
+      <InputGroup
         className={cn(
-          "h-11 w-full rounded-xl border border-input bg-background pr-3.5 pl-10 text-[15px] text-foreground shadow-xs transition-colors outline-none dark:bg-foreground/[0.04]",
-          "placeholder:text-foreground/40 hover:border-foreground/25 focus-visible:border-primary/70 focus-visible:ring-3 focus-visible:ring-primary/20",
-          "disabled:cursor-not-allowed disabled:opacity-60",
-          isPassword && "pr-11",
+          "h-11 rounded-xl bg-background shadow-xs transition-colors hover:border-foreground/25 dark:bg-foreground/[0.04]",
+          "has-[[data-slot=input-group-control]:focus-visible]:border-primary/70 has-[[data-slot=input-group-control]:focus-visible]:ring-primary/20",
           className
         )}
-        {...props}
-      />
-      {isPassword ? (
-        <button
-          type="button"
-          onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? "Hide password" : "Show password"}
-          aria-pressed={visible}
-          className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-foreground/45 transition-colors outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-primary/30"
-        >
-          {visible ? (
-            <EyeOff className="size-[18px]" />
-          ) : (
-            <Eye className="size-[18px]" />
+      >
+        <InputGroupAddon align="inline-start" className="pl-3.5">
+          <Icon aria-hidden className="size-[18px] text-foreground/45" />
+        </InputGroupAddon>
+        <InputGroupInput
+          id={id}
+          type={isPassword && visible ? "text" : type}
+          placeholder={label}
+          className={cn(
+            "h-full text-[15px] placeholder:text-foreground/40 md:text-[15px]",
+            isPassword &&
+              !visible &&
+              "[&:not(:placeholder-shown)]:text-xl [&:not(:placeholder-shown)]:tracking-[0.18em] md:[&:not(:placeholder-shown)]:text-xl"
           )}
-        </button>
-      ) : null}
+          {...props}
+        />
+        {isPassword ? (
+          <InputGroupAddon align="inline-end" className="pr-2">
+            <InputGroupButton
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              onClick={() => setVisible((v) => !v)}
+              aria-label={visible ? "Hide password" : "Show password"}
+              aria-pressed={visible}
+              className="rounded-lg text-foreground/45 hover:text-foreground"
+            >
+              {visible ? (
+                <EyeOff className="size-[18px]" />
+              ) : (
+                <Eye className="size-[18px]" />
+              )}
+            </InputGroupButton>
+          </InputGroupAddon>
+        ) : null}
+      </InputGroup>
     </div>
   )
 }

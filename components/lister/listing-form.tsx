@@ -3,6 +3,8 @@
 import * as React from "react"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 
+import dynamic from "next/dynamic"
+
 import { Field, inputClass } from "@/components/site/field"
 import { FormSelect } from "@/components/site/form-select"
 import { Button } from "@/components/ui/button"
@@ -11,8 +13,23 @@ import {
   useLocations,
   usePropertyTypes,
 } from "@/features/catalog/hooks"
+import { useMembers, usePermissions } from "@/features/lister/org-hooks"
+import type { AreaFocus } from "@/components/map/location-picker"
 import type { FeeInput, ListerListing, ListingInput } from "@/lib/api/lister"
 import { cn } from "@/lib/utils"
+
+const LocationPicker = dynamic(
+  () =>
+    import("@/components/map/location-picker").then((m) => m.LocationPicker),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[22rem] w-full animate-pulse rounded-2xl bg-muted" />
+    ),
+  }
+)
+
+export type Section = "basics" | "price" | "details" | "location" | "amenities"
 
 type DraftFee = {
   feeType: FeeInput["feeType"]
@@ -41,6 +58,10 @@ export type Draft = {
   longitude: string
   fees: DraftFee[]
   amenityIds: string[]
+  /** User id of the teammate in charge. Left undefined unless the person may assign. */
+  assignedTo?: string | null
+  /** True once the person changed it, so it is only sent when meant. */
+  assignedDirty?: boolean
 }
 
 const kobo = (naira: string) => Math.round(Number(naira) * 100)
@@ -73,6 +94,8 @@ export const toDraft = (listing?: ListerListing): Draft => ({
     refundable: Boolean(fee.refundable),
   })),
   amenityIds: listing?.amenityIds ?? [],
+  assignedTo: listing?.assignedTo ?? undefined,
+  assignedDirty: false,
 })
 
 /** Sends only documented fields, in kobo; totals are computed by the server. */
@@ -107,6 +130,7 @@ export function toInput(d: Draft): ListingInput {
           }))
       : [],
     amenityIds: d.amenityIds,
+    ...(d.assignedDirty ? { assignedTo: d.assignedTo ?? null } : {}),
   }
 }
 
@@ -145,6 +169,9 @@ export function ListingForm({
   saving,
   onSave,
   isNew,
+  only,
+  hideSave,
+  hideListingType,
 }: {
   draft: Draft
   onChange: (next: Draft) => void
@@ -152,7 +179,11 @@ export function ListingForm({
   saving?: boolean
   onSave: () => void
   isNew?: boolean
+  only?: Section[]
+  hideSave?: boolean
+  hideListingType?: boolean
 }) {
+  const show = (key: Section) => !only || only.includes(key)
   const types = usePropertyTypes().data
   const states = useLocations().data
   const lgas = useLocations(
@@ -164,6 +195,37 @@ export function ListingForm({
     Boolean(draft.lgaId)
   ).data
   const clusters = useAmenities().data
+  // What the map should show for the State / LGA / Neighbourhood selected.
+  const areaFocus = React.useMemo<AreaFocus | null>(() => {
+    const find = (list: unknown, id: string) =>
+      Array.isArray(list)
+        ? (list as { id: string; name: string }[]).find((x) => x.id === id)
+        : undefined
+    const state = find(states, draft.stateId)
+    if (!state) return null
+    const stateName = /abuja|federal capital|fct/i.test(state.name)
+      ? "Abuja"
+      : `${state.name.replace(/\s+state$/i, "")} State`
+    const lga = find(lgas, draft.lgaId)
+    const area = find(areas, draft.areaId)
+    if (lga && area)
+      return {
+        level: "neighbourhood",
+        label: area.name,
+        query: `${area.name}, ${lga.name}, ${stateName}`,
+      }
+    if (lga)
+      return {
+        level: "lga",
+        label: lga.name,
+        query: `${lga.name}, ${stateName}`,
+      }
+    return { level: "state", label: stateName, query: `${stateName}, Nigeria` }
+  }, [states, lgas, areas, draft.stateId, draft.lgaId, draft.areaId])
+  const { can } = usePermissions()
+  const canAssign =
+    can("listing:update:any") && can("member:manage", "member:invite")
+  const members = useMembers(canAssign && show("basics")).data
   const set = (patch: Partial<Draft>) => onChange({ ...draft, ...patch })
   const rent = draft.listingType === "RENT"
 
@@ -197,264 +259,313 @@ export function ListingForm({
         onSave()
       }}
     >
-      <Card title="The basics">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Listing type">
-            <FormSelect
-              aria-label="Listing type"
-              placeholder="Choose"
-              disabled={disabled || !isNew}
-              value={draft.listingType}
-              onChange={(e) =>
-                set({ listingType: e.target.value as Draft["listingType"] })
-              }
-              options={[
-                { value: "RENT", label: "For rent" },
-                { value: "SALE", label: "For sale" },
-              ]}
-            />
-          </Field>
-          <Field label="Property type">
-            <FormSelect
-              aria-label="Property type"
-              placeholder="Choose a sub-type"
-              disabled={disabled}
-              value={draft.propertyTypeId}
-              onChange={(e) => set({ propertyTypeId: e.target.value })}
-              options={leafTypes}
-            />
-          </Field>
-          <Field label="Title" className="sm:col-span-2">
-            {text("title", {
-              required: true,
-              minLength: 5,
-              maxLength: 120,
-              placeholder: "e.g. Spacious 2 bedroom flat in Lekki",
-            })}
-          </Field>
-          <Field label="Description" className="sm:col-span-2">
-            <textarea
-              value={draft.description}
-              onChange={(e) => set({ description: e.target.value })}
-              disabled={disabled}
-              rows={5}
-              placeholder="At least 20 characters. Describe the space, the neighbourhood and what's included."
-              className={cn(inputClass, "h-auto min-h-32 resize-y py-3")}
-            />
-          </Field>
-        </div>
-      </Card>
-
-      <Card title="Price" hint="Enter naira. We store and show exact amounts.">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label={rent ? "Rent per period (₦)" : "Sale price (₦)"}>
-            {text("price", { inputMode: "numeric", placeholder: "3500000" })}
-          </Field>
-          {rent ? (
-            <Field label="Rent period">
+      {show("basics") ? (
+        <Card title="The basics">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Listing type"
+              className={hideListingType ? "hidden" : undefined}
+            >
               <FormSelect
-                aria-label="Rent period"
+                aria-label="Listing type"
                 placeholder="Choose"
-                disabled={disabled}
-                value={draft.rentPeriod}
+                disabled={disabled || !isNew}
+                value={draft.listingType}
                 onChange={(e) =>
-                  set({ rentPeriod: e.target.value as Draft["rentPeriod"] })
+                  set({ listingType: e.target.value as Draft["listingType"] })
                 }
                 options={[
-                  { value: "YEAR", label: "Per year" },
-                  { value: "MONTH", label: "Per month" },
+                  { value: "RENT", label: "For rent" },
+                  { value: "SALE", label: "For sale" },
                 ]}
               />
             </Field>
-          ) : null}
-        </div>
-
-        {rent ? (
-          <div className="flex flex-col gap-3 border-t pt-4">
-            <h3 className="text-sm font-semibold">Fees</h3>
-            {draft.fees.map((fee, index) => (
-              <div
-                key={index}
-                className="grid items-end gap-2 sm:grid-cols-[1.2fr_1fr_1fr_auto_auto]"
-              >
+            <Field label="Property type">
+              <FormSelect
+                aria-label="Property type"
+                placeholder="Choose a sub-type"
+                disabled={disabled}
+                value={draft.propertyTypeId}
+                onChange={(e) => set({ propertyTypeId: e.target.value })}
+                options={leafTypes}
+              />
+            </Field>
+            <Field label="Title" className="sm:col-span-2">
+              {text("title", {
+                required: true,
+                minLength: 5,
+                maxLength: 120,
+                placeholder: "e.g. Spacious 2 bedroom flat in Lekki",
+              })}
+            </Field>
+            {canAssign ? (
+              <Field label="Assigned to" className="sm:col-span-2">
                 <FormSelect
-                  aria-label="Fee type"
-                  placeholder="Fee"
+                  aria-label="Assigned to"
+                  placeholder="Nobody yet"
                   disabled={disabled}
-                  value={fee.feeType}
+                  value={draft.assignedTo ?? ""}
                   onChange={(e) =>
-                    setFee(index, {
-                      feeType: e.target.value as FeeInput["feeType"],
-                    })
-                  }
-                  options={feeTypes}
-                />
-                <input
-                  aria-label="Fee amount in naira"
-                  inputMode="numeric"
-                  placeholder="Amount (₦)"
-                  disabled={disabled}
-                  value={fee.amount}
-                  onChange={(e) => setFee(index, { amount: e.target.value })}
-                  className={inputClass}
-                />
-                <FormSelect
-                  aria-label="Frequency"
-                  placeholder="When"
-                  disabled={disabled}
-                  value={fee.frequency}
-                  onChange={(e) =>
-                    setFee(index, {
-                      frequency: e.target.value as FeeInput["frequency"],
+                    set({
+                      assignedTo: e.target.value || null,
+                      assignedDirty: true,
                     })
                   }
                   options={[
-                    { value: "FIRST_PAYMENT", label: "First payment" },
-                    { value: "RECURRING", label: "Every renewal" },
+                    { value: "", label: "Nobody (any teammate can edit)" },
+                    ...(Array.isArray(members) ? members : [])
+                      .filter((m) => m.status === "ACTIVE")
+                      .map((m) => ({
+                        value: m.userId,
+                        label: `${m.firstName} ${m.lastName} · ${m.roleName}`,
+                      })),
                   ]}
                 />
-                <label className="flex h-12 items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={fee.refundable}
-                    disabled={disabled}
-                    onChange={(e) =>
-                      setFee(index, { refundable: e.target.checked })
-                    }
-                    className="size-4 accent-[var(--primary)]"
-                  />{" "}
-                  Refundable
-                </label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Remove fee"
-                  disabled={disabled}
-                  onClick={() =>
-                    set({ fees: draft.fees.filter((_, i) => i !== index) })
-                  }
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-            ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="self-start"
-              disabled={disabled}
-              onClick={() =>
-                set({
-                  fees: [
-                    ...draft.fees,
-                    {
-                      feeType: "CAUTION_DEPOSIT",
-                      amount: "",
-                      frequency: "FIRST_PAYMENT",
-                      refundable: false,
-                    },
-                  ],
-                })
-              }
-            >
-              <Plus /> Add a fee
-            </Button>
+              </Field>
+            ) : null}
+            <Field label="Description" className="sm:col-span-2">
+              <textarea
+                value={draft.description}
+                onChange={(e) => set({ description: e.target.value })}
+                disabled={disabled}
+                rows={5}
+                placeholder="At least 20 characters. Describe the space, the neighbourhood and what's included."
+                className={cn(inputClass, "h-auto min-h-32 resize-y py-3")}
+              />
+            </Field>
           </div>
-        ) : null}
-      </Card>
+        </Card>
+      ) : null}
 
-      <Card title="Details">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Field label="Bedrooms">
-            {text("bedrooms", { inputMode: "numeric" })}
-          </Field>
-          <Field label="Bathrooms">
-            {text("bathrooms", { inputMode: "numeric" })}
-          </Field>
-          <Field label="Toilets">
-            {text("toilets", { inputMode: "numeric" })}
-          </Field>
-          <Field label="Size (sqm)">
-            {text("sizeSqm", { inputMode: "numeric" })}
-          </Field>
-          <Field label="Furnishing">
-            <FormSelect
-              aria-label="Furnishing"
-              placeholder="Choose"
-              disabled={disabled}
-              value={draft.furnishing}
-              onChange={(e) => set({ furnishing: e.target.value })}
-              options={[
-                { value: "UNFURNISHED", label: "Unfurnished" },
-                { value: "SEMI_FURNISHED", label: "Semi-furnished" },
-                { value: "FURNISHED", label: "Furnished" },
-              ]}
-            />
-          </Field>
-        </div>
-      </Card>
+      {show("price") ? (
+        <Card
+          title="Price"
+          hint="Enter naira. We store and show exact amounts."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={rent ? "Rent per period (₦)" : "Sale price (₦)"}>
+              {text("price", { inputMode: "numeric", placeholder: "3500000" })}
+            </Field>
+            {rent ? (
+              <Field label="Rent period">
+                <FormSelect
+                  aria-label="Rent period"
+                  placeholder="Choose"
+                  disabled={disabled}
+                  value={draft.rentPeriod}
+                  onChange={(e) =>
+                    set({ rentPeriod: e.target.value as Draft["rentPeriod"] })
+                  }
+                  options={[
+                    { value: "YEAR", label: "Per year" },
+                    { value: "MONTH", label: "Per month" },
+                  ]}
+                />
+              </Field>
+            ) : null}
+          </div>
 
-      <Card
-        title="Location"
-        hint="State, area and neighbourhood must belong together."
-      >
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field label="State">
-            <FormSelect
-              aria-label="State"
-              placeholder="Choose"
-              disabled={disabled}
-              value={draft.stateId}
-              onChange={(e) =>
-                set({ stateId: e.target.value, lgaId: "", areaId: "" })
-              }
-              options={(states ?? []).map((s) => ({
-                value: s.id,
-                label: s.name,
-              }))}
-            />
-          </Field>
-          <Field label="Area (LGA)">
-            <FormSelect
-              aria-label="LGA"
-              placeholder="Choose"
-              disabled={disabled || !draft.stateId}
-              value={draft.lgaId}
-              onChange={(e) => set({ lgaId: e.target.value, areaId: "" })}
-              options={(lgas ?? []).map((l) => ({
-                value: l.id,
-                label: l.name,
-              }))}
-            />
-          </Field>
-          <Field label="Neighbourhood">
-            <FormSelect
-              aria-label="Neighbourhood"
-              placeholder="Choose"
-              disabled={disabled || !draft.lgaId}
-              value={draft.areaId}
-              onChange={(e) => set({ areaId: e.target.value })}
-              options={(areas ?? []).map((a) => ({
-                value: a.id,
-                label: a.name,
-              }))}
-            />
-          </Field>
-          <Field label="Street address" className="sm:col-span-3">
-            {text("addressLine", { placeholder: "12 Admiralty Way" })}
-          </Field>
-          <Field label="Latitude (optional)">
-            {text("latitude", { inputMode: "decimal", placeholder: "6.45" })}
-          </Field>
-          <Field label="Longitude (optional)">
-            {text("longitude", { inputMode: "decimal", placeholder: "3.47" })}
-          </Field>
-        </div>
-      </Card>
+          {rent ? (
+            <div className="flex flex-col gap-3 border-t pt-4">
+              <h3 className="text-sm font-semibold">Fees</h3>
+              {draft.fees.map((fee, index) => (
+                <div
+                  key={index}
+                  className="grid items-end gap-2 sm:grid-cols-[1.2fr_1fr_1fr_auto_auto]"
+                >
+                  <FormSelect
+                    aria-label="Fee type"
+                    placeholder="Fee"
+                    disabled={disabled}
+                    value={fee.feeType}
+                    onChange={(e) =>
+                      setFee(index, {
+                        feeType: e.target.value as FeeInput["feeType"],
+                      })
+                    }
+                    options={feeTypes}
+                  />
+                  <input
+                    aria-label="Fee amount in naira"
+                    inputMode="numeric"
+                    placeholder="Amount (₦)"
+                    disabled={disabled}
+                    value={fee.amount}
+                    onChange={(e) => setFee(index, { amount: e.target.value })}
+                    className={inputClass}
+                  />
+                  <FormSelect
+                    aria-label="Frequency"
+                    placeholder="When"
+                    disabled={disabled}
+                    value={fee.frequency}
+                    onChange={(e) =>
+                      setFee(index, {
+                        frequency: e.target.value as FeeInput["frequency"],
+                      })
+                    }
+                    options={[
+                      { value: "FIRST_PAYMENT", label: "First payment" },
+                      { value: "RECURRING", label: "Every renewal" },
+                    ]}
+                  />
+                  <label className="flex h-12 items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={fee.refundable}
+                      disabled={disabled}
+                      onChange={(e) =>
+                        setFee(index, { refundable: e.target.checked })
+                      }
+                      className="size-4 accent-[var(--primary)]"
+                    />{" "}
+                    Refundable
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Remove fee"
+                    disabled={disabled}
+                    onClick={() =>
+                      set({ fees: draft.fees.filter((_, i) => i !== index) })
+                    }
+                  >
+                    <Trash2 />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="self-start"
+                disabled={disabled}
+                onClick={() =>
+                  set({
+                    fees: [
+                      ...draft.fees,
+                      {
+                        feeType: "CAUTION_DEPOSIT",
+                        amount: "",
+                        frequency: "FIRST_PAYMENT",
+                        refundable: false,
+                      },
+                    ],
+                  })
+                }
+              >
+                <Plus /> Add a fee
+              </Button>
+            </div>
+          ) : null}
+        </Card>
+      ) : null}
 
-      {clusters?.length ? (
+      {show("details") ? (
+        <Card title="Details">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <Field label="Bedrooms">
+              {text("bedrooms", { inputMode: "numeric" })}
+            </Field>
+            <Field label="Bathrooms">
+              {text("bathrooms", { inputMode: "numeric" })}
+            </Field>
+            <Field label="Toilets">
+              {text("toilets", { inputMode: "numeric" })}
+            </Field>
+            <Field label="Size (sqm)">
+              {text("sizeSqm", { inputMode: "numeric" })}
+            </Field>
+            <Field label="Furnishing">
+              <FormSelect
+                aria-label="Furnishing"
+                placeholder="Choose"
+                disabled={disabled}
+                value={draft.furnishing}
+                onChange={(e) => set({ furnishing: e.target.value })}
+                options={[
+                  { value: "UNFURNISHED", label: "Unfurnished" },
+                  { value: "SEMI_FURNISHED", label: "Semi-furnished" },
+                  { value: "FURNISHED", label: "Furnished" },
+                ]}
+              />
+            </Field>
+          </div>
+        </Card>
+      ) : null}
+
+      {show("location") ? (
+        <Card
+          title="Location"
+          hint="State, area and neighbourhood must belong together."
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="State">
+              <FormSelect
+                aria-label="State"
+                placeholder="Choose"
+                disabled={disabled}
+                value={draft.stateId}
+                onChange={(e) =>
+                  set({ stateId: e.target.value, lgaId: "", areaId: "" })
+                }
+                options={(states ?? []).map((s) => ({
+                  value: s.id,
+                  label: s.name,
+                }))}
+              />
+            </Field>
+            <Field label="Area (LGA)">
+              <FormSelect
+                aria-label="LGA"
+                placeholder="Choose"
+                disabled={disabled || !draft.stateId}
+                value={draft.lgaId}
+                onChange={(e) => set({ lgaId: e.target.value, areaId: "" })}
+                options={(lgas ?? []).map((l) => ({
+                  value: l.id,
+                  label: l.name,
+                }))}
+              />
+            </Field>
+            <Field label="Neighbourhood">
+              <FormSelect
+                aria-label="Neighbourhood"
+                placeholder="Choose"
+                disabled={disabled || !draft.lgaId}
+                value={draft.areaId}
+                onChange={(e) => set({ areaId: e.target.value })}
+                options={(areas ?? []).map((a) => ({
+                  value: a.id,
+                  label: a.name,
+                }))}
+              />
+            </Field>
+            <Field label="Street address" className="sm:col-span-3">
+              {text("addressLine", { placeholder: "12 Admiralty Way" })}
+            </Field>
+            <div className="flex flex-col gap-2 sm:col-span-3">
+              <p className="text-base font-semibold">Pin on the map</p>
+              <LocationPicker
+                focus={areaFocus}
+                lat={num(draft.latitude)}
+                lng={num(draft.longitude)}
+                disabled={disabled}
+                onChange={(la, ln) =>
+                  set({
+                    latitude: la === null ? "" : String(la),
+                    longitude: ln === null ? "" : String(ln),
+                  })
+                }
+                onUseAddress={(address) => set({ addressLine: address })}
+              />
+            </div>
+          </div>
+        </Card>
+      ) : null}
+
+      {show("amenities") && clusters?.length ? (
         <Card title="Amenities">
           {clusters.map((cluster) => (
             <fieldset
@@ -496,7 +607,7 @@ export function ListingForm({
         </Card>
       ) : null}
 
-      <div className="flex justify-end">
+      <div className={cn("flex justify-end", hideSave && "hidden")}>
         <Button
           type="submit"
           size="lg"

@@ -2,9 +2,21 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { KeyRound, Loader2 } from "lucide-react"
+import {
+  ArrowUpRight,
+  BadgeCheck,
+  Handshake,
+  HandCoins,
+  KeyRound,
+  Timer,
+} from "lucide-react"
 
-import { PageHeader } from "@/components/account/page-header"
+import {
+  ListerEmpty,
+  ListerHero,
+  ListSkeleton,
+  timeAgo,
+} from "@/components/lister/lister-ui"
 import { StatusBadge } from "@/components/account/status-badge"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
@@ -28,45 +40,84 @@ export function ListerDealsPage() {
   } | null>(null)
   const handover = useHandoverCode(setCode)
   const items = query.data ?? []
+  const paid = items.filter((d) => d.status === "PAID")
+  const held = items.filter((d) => d.status === "HELD")
+  const paidKobo = paid.reduce((n, d) => n + (d.totalKobo ?? d.payKobo ?? 0), 0)
 
   return (
     <>
-      <PageHeader
+      <ListerHero
+        icon={Handshake}
+        eyebrow="Deals"
         title="Deals"
         description="Reservations and payments for your listings."
+        loading={query.isPending}
+        stats={[
+          { label: "All deals", value: items.length, icon: Handshake },
+          {
+            label: "Paid",
+            value: paid.length,
+            icon: BadgeCheck,
+            tone: "good",
+            hint: "Ready for handover",
+          },
+          {
+            label: "On hold",
+            value: held.length,
+            icon: Timer,
+            tone: held.length ? "warn" : "default",
+            hint: "Waiting for payment",
+          },
+          {
+            label: "Paid value",
+            value: formatNaira(paidKobo),
+            icon: HandCoins,
+          },
+        ]}
       />
       {query.isPending ? (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading…
-        </p>
+        <ListSkeleton />
       ) : query.isError ? (
         <RetryState label="deals" onRetry={() => query.refetch()} />
       ) : items.length === 0 ? (
-        <p className="rounded-xl bg-card px-6 py-14 text-center text-sm text-muted-foreground shadow-md">
-          No deals yet.
-        </p>
+        <ListerEmpty
+          icon={Handshake}
+          title="No deals yet"
+          hint="When a customer reserves one of your listings, the deal shows up here with its payment status."
+        />
       ) : (
         <ul className="grid gap-3">
           {items.map((deal) => (
             <li
               key={deal.id}
-              className="flex flex-col gap-3 rounded-xl bg-card p-5 shadow-md sm:flex-row sm:items-center sm:justify-between"
+              className="group flex flex-col gap-3 rounded-xl bg-card p-4 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl sm:flex-row sm:items-center sm:justify-between sm:p-5"
             >
-              <div className="min-w-0">
-                <Link
-                  href={`/lister/deals/${deal.id}`}
-                  className="block truncate font-semibold hover:text-primary"
-                >
-                  {deal.listing?.title ?? "Property"}
-                </Link>
-                <p className="text-sm text-muted-foreground">
-                  {deal.moveInDate
-                    ? `Move-in ${formatDate(deal.moveInDate)}`
-                    : formatDate(deal.createdAt)}
-                </p>
+              <div className="flex min-w-0 items-center gap-4">
+                <span className="hidden size-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 sm:grid">
+                  <Handshake className="size-5" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <Link
+                    href={`/lister/deals/${deal.id}`}
+                    className="flex items-center gap-1 truncate font-semibold group-hover:text-primary"
+                  >
+                    <span className="truncate">
+                      {deal.listing?.title ?? "Property"}
+                    </span>
+                    <ArrowUpRight
+                      className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                      aria-hidden
+                    />
+                  </Link>
+                  <p className="text-sm text-muted-foreground">
+                    {deal.moveInDate
+                      ? `Move-in ${formatDate(deal.moveInDate)}`
+                      : `Created ${timeAgo(deal.createdAt)}`}
+                  </p>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <span className="font-medium">
+                <span className="font-semibold tabular-nums">
                   {formatNaira(deal.totalKobo ?? deal.payKobo)}
                 </span>
                 <StatusBadge status={deal.status} />

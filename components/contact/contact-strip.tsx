@@ -1,107 +1,137 @@
-import Image from "next/image"
-import Link from "next/link"
+"use client"
 
-import { IconMask } from "@/components/landing/icon-mask"
-import { Logo } from "@/components/logo"
+import * as React from "react"
+import Link from "next/link"
+import { Check, Clock, Copy, Mail, MapPin, Phone } from "lucide-react"
+
 import { cn } from "@/lib/utils"
 
-const tile =
-  "group relative flex flex-col items-center gap-2.5 rounded-xl bg-card px-3 py-4 text-center outline-none transition-[box-shadow,translate] hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-3 focus-visible:ring-ring/50 sm:gap-3 sm:px-4 sm:py-5"
+const cards = [
+  {
+    icon: Mail,
+    label: "Email",
+    value: "hello@veridom.app",
+    href: "mailto:hello@veridom.app",
+    hint: "Replies within a day",
+    copy: true,
+  },
+  {
+    icon: Phone,
+    label: "Phone",
+    value: "+234 800 000 0000",
+    href: "tel:+2348000000000",
+    hint: "Mon to Fri, 9am to 6pm",
+    copy: true,
+  },
+  {
+    icon: MapPin,
+    label: "Head office",
+    value: "Lagos, Nigeria",
+    href: "#offices",
+    hint: "See all offices",
+  },
+  {
+    icon: Clock,
+    label: "Office hours",
+    value: "Mon to Fri, 9am to 6pm",
+    hint: "West Africa Time",
+  },
+] as const
 
-function Ring({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-full border border-primary/50 p-1.5">
-      <span className="block rounded-full border border-primary/50 p-2.5">
-        {children}
-      </span>
-    </span>
-  )
-}
-
-function Corner() {
-  return (
-    <IconMask
-      src="/landing/icon-arrow.svg"
-      className="absolute top-2.5 right-2.5 size-4 text-muted-foreground transition-colors group-hover:text-primary sm:top-3 sm:right-3 sm:size-5"
-    />
-  )
-}
-
-const links = [
+const socials = [
   { label: "Instagram", href: "#" },
   { label: "LinkedIn", href: "#" },
   { label: "Facebook", href: "#" },
 ]
 
+function CopyButton({ text }: { text: string }) {
+  const [done, setDone] = React.useState(false)
+
+  return (
+    <button
+      type="button"
+      aria-label={`Copy ${text}`}
+      onClick={async (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        try {
+          await navigator.clipboard.writeText(text)
+          setDone(true)
+          setTimeout(() => setDone(false), 1600)
+        } catch {
+          // clipboard unavailable
+        }
+      }}
+      className="grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50"
+    >
+      {done ? (
+        <Check className="size-4 text-primary" />
+      ) : (
+        <Copy className="size-4" />
+      )}
+    </button>
+  )
+}
+
 export function ContactStrip() {
   return (
     <section
       aria-label="Contact details"
-      className="grid grid-cols-2 gap-2.5 bg-muted/60 p-2.5 sm:gap-3 sm:p-3 lg:grid-cols-4"
+      className="relative z-10 mx-auto -mt-8 grid max-w-[1280px] gap-3 px-4 sm:grid-cols-2 sm:px-8 lg:-mt-10 lg:grid-cols-4 lg:px-12"
     >
-      <Link href="mailto:info@veridom.com" className={tile}>
-        <Ring>
-          <Image
-            src="/contact/icon-mail.svg"
-            alt=""
-            width={26}
-            height={26}
-            unoptimized
-          />
-        </Ring>
-        <span className="text-sm font-semibold break-all sm:text-base lg:text-lg">
-          info@veridom.com
-        </span>
-        <Corner />
-      </Link>
-      <Link href="tel:+11234567890" className={tile}>
-        <Ring>
-          <Image
-            src="/contact/icon-phone.svg"
-            alt=""
-            width={26}
-            height={26}
-            unoptimized
-          />
-        </Ring>
-        <span className="text-sm font-semibold sm:text-base lg:text-lg">
-          +1 (123) 456-7890
-        </span>
-        <Corner />
-      </Link>
-      <Link href="#offices" className={tile}>
-        <Ring>
-          <Image
-            src="/contact/icon-pin.svg"
-            alt=""
-            width={26}
-            height={26}
-            unoptimized
-          />
-        </Ring>
-        <span className="text-sm font-semibold sm:text-base lg:text-lg">
-          Main Headquarters
-        </span>
-        <Corner />
-      </Link>
-      <div className={cn(tile, "hover:translate-y-0 hover:shadow-none")}>
-        <Ring>
-          <Logo className="size-[26px]" />
-        </Ring>
-        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm font-semibold sm:text-base">
-          {links.map((link) => (
-            <li key={link.label}>
-              <Link
-                href={link.href}
-                className="underline underline-offset-2 hover:text-primary"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <Corner />
-      </div>
+      {cards.map((card) => {
+        const body = (
+          <>
+            <div className="flex items-start justify-between">
+              <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                <card.icon className="size-5" />
+              </span>
+              {"copy" in card && card.copy ? (
+                <CopyButton text={card.value} />
+              ) : null}
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                {card.label}
+              </p>
+              <p className="text-base font-semibold break-all">{card.value}</p>
+              <p className="text-xs text-muted-foreground">{card.hint}</p>
+            </div>
+          </>
+        )
+        const cls =
+          "group flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-md outline-none"
+        return "href" in card && card.href ? (
+          <Link
+            key={card.label}
+            href={card.href}
+            className={cn(
+              cls,
+              "transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50"
+            )}
+          >
+            {body}
+          </Link>
+        ) : (
+          <div key={card.label} className={cls}>
+            {body}
+          </div>
+        )
+      })}
+      <p className="text-sm text-muted-foreground sm:col-span-2 lg:col-span-4">
+        Find us on{" "}
+        {socials.map((s, i) => (
+          <React.Fragment key={s.label}>
+            <Link
+              href={s.href}
+              className="font-semibold text-foreground underline underline-offset-2 hover:text-primary"
+            >
+              {s.label}
+            </Link>
+            {i < socials.length - 1 ? ", " : "."}
+          </React.Fragment>
+        ))}
+      </p>
     </section>
   )
 }

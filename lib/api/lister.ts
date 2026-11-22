@@ -44,6 +44,7 @@ export type ListingInput = {
   longitude?: number
   fees?: FeeInput[]
   amenityIds?: string[]
+  assignedTo?: string | null
 }
 
 export type ListerListing = ListingInput & {

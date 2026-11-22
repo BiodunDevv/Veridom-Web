@@ -174,6 +174,25 @@ export function RegisterForm({ embedded }: { embedded?: EmbeddedAuth }) {
         <AuthButton type="submit" loading={isPending}>
           Create account
         </AuthButton>
+        <p className="text-center text-xs leading-relaxed text-foreground/55">
+          By creating an account you agree to our{" "}
+          <Link
+            href="/terms"
+            className={authLinkClass}
+            onClick={embedded?.close}
+          >
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/privacy"
+            className={authLinkClass}
+            onClick={embedded?.close}
+          >
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </div>
 
       <AuthDivider>Or continue with</AuthDivider>

@@ -4,21 +4,21 @@ import Link from "next/link"
 import {
   ArrowUpRight,
   BadgeCheck,
-  Building2,
   CalendarCheck,
-  ChevronRight,
   Handshake,
-  Loader2,
   LogOut,
   Search,
 } from "lucide-react"
 
+import { PatternBg } from "@/components/ui/pattern-bg"
+import { ListersSection } from "@/components/account/listers-section"
+import { BecomeListerDialog } from "@/components/account/become-lister-dialog"
 import { initialsOf } from "@/lib/initials"
 import { Button } from "@/components/ui/button"
 import { useLogout, useMe } from "@/features/auth/hooks"
 import { useDeals, useInspections } from "@/features/deals/hooks"
-import { useMine, useSwitchOrg } from "@/features/lister/org-hooks"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import * as React from "react"
 
 function Stat({
   href,
@@ -40,15 +40,18 @@ function Stat({
       href={href}
       className={
         featured
-          ? "group flex flex-col gap-3 rounded-2xl bg-primary p-5 text-primary-foreground shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl"
+          ? "group relative flex flex-col gap-3 overflow-hidden rounded-2xl bg-panel p-5 text-panel-foreground shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl"
           : "group flex flex-col gap-3 rounded-2xl bg-card p-5 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl"
       }
     >
-      <div className="flex items-center justify-between">
+      {featured ? (
+        <PatternBg className="object-right opacity-25 mix-blend-soft-light dark:opacity-20" />
+      ) : null}
+      <div className="relative flex items-center justify-between">
         <span
           className={
             featured
-              ? "grid size-9 place-items-center rounded-full bg-primary-foreground/15"
+              ? "grid size-9 place-items-center rounded-full bg-panel-foreground/15"
               : "grid size-9 place-items-center rounded-full bg-primary/10 text-primary"
           }
         >
@@ -56,11 +59,11 @@ function Stat({
         </span>
         <ArrowUpRight className="size-4 opacity-60 transition-opacity group-hover:opacity-100" />
       </div>
-      <div>
+      <div className="relative">
         <p className="text-sm font-medium opacity-80">{label}</p>
         <p className="text-3xl font-semibold tracking-tight">{value}</p>
       </div>
-      <p className="text-xs opacity-70">{hint}</p>
+      <p className="relative text-xs opacity-70">{hint}</p>
     </Link>
   )
 }
@@ -70,10 +73,9 @@ export function OverviewPage() {
   const me = useMe().data
   const deals = useDeals().data
   const viewings = useInspections().data
-  const mine = useMine().data
-  const switchOrg = useSwitchOrg(() => router.push("/lister"))
   const logout = useLogout()
-  const orgs = mine?.organizations ?? []
+  const params = useSearchParams()
+  const [creating, setCreating] = React.useState(params.get("lister") === "new")
 
   return (
     <>
@@ -115,58 +117,7 @@ export function OverviewPage() {
         />
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-md sm:p-6">
-        <div className="flex items-start gap-4">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-            <Building2 className="size-5" />
-          </span>
-          <div className="flex flex-col gap-1">
-            <h2 className="text-lg font-semibold">
-              {orgs.length ? "Your listers" : "Join as a lister"}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {orgs.length
-                ? "Switch to a lister to manage listings, viewings and payouts."
-                : "Own or manage property? Create a lister to publish verified listings and receive payouts."}
-            </p>
-          </div>
-        </div>
-        {orgs.length ? (
-          <ul className="flex flex-col gap-2">
-            {orgs.map((org) => (
-              <li key={org.organizationId}>
-                <button
-                  type="button"
-                  disabled={switchOrg.isPending}
-                  onClick={() => switchOrg.mutate(org.organizationId)}
-                  className="flex w-full items-center gap-3 rounded-xl bg-muted/60 px-4 py-3 text-left text-sm transition-colors hover:bg-accent disabled:opacity-60"
-                >
-                  <span className="flex-1 truncate font-medium">
-                    {org.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {org.roleName}
-                  </span>
-                  {switchOrg.isPending ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <ChevronRight className="size-4 text-muted-foreground" />
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <Button
-          asChild
-          variant={orgs.length ? "outline" : "default"}
-          className="self-start"
-        >
-          <Link href="/lister">
-            {orgs.length ? "Create another lister" : "Become a lister"}
-          </Link>
-        </Button>
-      </div>
+      <ListersSection onCreate={() => setCreating(true)} />
 
       <Button
         variant="outline"
@@ -177,6 +128,13 @@ export function OverviewPage() {
       >
         <LogOut /> Log out
       </Button>
+      <BecomeListerDialog
+        open={creating}
+        onOpenChange={(next) => {
+          setCreating(next)
+          if (!next && params.get("lister")) router.replace("/account")
+        }}
+      />
     </>
   )
 }

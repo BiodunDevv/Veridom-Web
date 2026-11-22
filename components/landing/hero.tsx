@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 import { HeroBadge } from "./hero-badge"
+import { HeroLines } from "./hero-lines"
 
 const stats = [
   { value: "200+", label: "Happy Customers" },
@@ -69,24 +70,18 @@ export function Hero() {
       <HeroBadge className="absolute top-[304px] left-6 z-10 size-[104px] sm:top-[344px] sm:left-10 lg:top-[12%] lg:left-1/2 lg:size-[132px] lg:-translate-x-1/2" />
 
       <div className="relative order-first h-[340px] overflow-hidden rounded-2xl bg-card ring-1 ring-border sm:h-[380px] lg:order-none lg:h-auto lg:min-h-0 lg:rounded-none">
-        <Image
-          src="/landing/abstract-lines.svg"
-          alt=""
-          fill
-          unoptimized
-          className="object-cover opacity-35 dark:opacity-70"
-        />
+        <HeroLines />
         <Image
           src="/landing/image.png"
           alt="Modern glass high-rise towers"
           fill
           priority
           sizes="(min-width: 1024px) 50vw, 100vw"
-          className="object-cover object-[58%_100%] hue-rotate-[-95deg] lg:object-bottom"
+          className="pointer-events-none object-cover object-[58%_100%] hue-rotate-[-95deg] lg:object-bottom"
         />
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(235deg,color-mix(in_oklab,var(--primary)_32%,var(--background))_8%,transparent_50%)] max-lg:opacity-70"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(235deg,color-mix(in_oklab,var(--primary)_32%,var(--background))_8%,transparent_50%)] max-lg:opacity-70"
         />
       </div>
     </section>

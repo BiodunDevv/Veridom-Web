@@ -2,7 +2,7 @@ import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 
-import { IconMask } from "@/components/landing/icon-mask"
+import { TileArt } from "@/components/site/tile-art"
 
 export function Cta() {
   return (
@@ -10,14 +10,7 @@ export function Cta() {
       id="about"
       className="relative isolate scroll-mt-4 overflow-hidden bg-muted/60"
     >
-      <IconMask
-        src="/landing/cta-art-left.svg"
-        className="pointer-events-none absolute bottom-0 left-0 -z-10 h-[258px] w-[474px] text-foreground/[0.06]"
-      />
-      <IconMask
-        src="/landing/cta-art-right.svg"
-        className="pointer-events-none absolute right-0 bottom-0 -z-10 h-[310px] w-[569px] -scale-y-100 rotate-180 text-foreground/[0.06]"
-      />
+      <TileArt />
       <div className="mx-auto flex max-w-[1280px] flex-col gap-6 px-5 py-10 sm:px-8 lg:flex-row lg:items-center lg:justify-between lg:gap-24 lg:px-12 lg:py-12">
         <div className="flex max-w-3xl flex-col gap-2">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">

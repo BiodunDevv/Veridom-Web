@@ -30,6 +30,7 @@ const Toaster = (props: ToasterProps) => {
     <Sonner
       theme={(resolvedTheme as ToasterProps["theme"]) ?? "system"}
       position="bottom-right"
+      mobileOffset={{ bottom: 96, left: 12, right: 12 }}
       closeButton
       visibleToasts={4}
       icons={{

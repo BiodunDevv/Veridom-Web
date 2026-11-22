@@ -6,16 +6,18 @@ import { listerApi, type Availability } from "@/lib/api/lister"
 import { queryKeys } from "@/lib/query/keys"
 import { useAction } from "@/lib/query/use-action"
 
-export const useListerInspections = () =>
+export const useListerInspections = (enabled = true) =>
   useQuery({
     queryKey: queryKeys.lister.inspections,
     queryFn: listerApi.inspections,
+    enabled,
     retry: false,
   })
-export const useListerDeals = () =>
+export const useListerDeals = (enabled = true) =>
   useQuery({
     queryKey: queryKeys.lister.deals,
     queryFn: listerApi.deals,
+    enabled,
     retry: false,
   })
 export const usePayoutAccount = (enabled: boolean) =>

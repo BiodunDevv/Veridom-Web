@@ -1,5 +1,11 @@
+import { Suspense } from "react"
+
 import { OverviewPage } from "@/components/account/overview-page"
 
 export default function Page() {
-  return <OverviewPage />
+  return (
+    <Suspense fallback={null}>
+      <OverviewPage />
+    </Suspense>
+  )
 }

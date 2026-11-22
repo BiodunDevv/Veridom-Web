@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client"
+import { ApiError, apiRequest } from "@/lib/api/client"
 import type {
   ApiMessage,
   ApiSuccess,
@@ -43,6 +43,24 @@ export type ChangePasswordPayload = {
   newPassword: string
 }
 
+/**
+ * Superadmins sign in through the admin console only. If one reaches the
+ * public web app (fresh login or an existing shared session), end that
+ * session right away so the customer site never runs as a superadmin.
+ */
+async function rejectSuperAdmin(user: AuthUser): Promise<AuthUser> {
+  if (user.role !== "SUPERADMIN") return user
+
+  await apiRequest("/api/v1/auth/logout", { method: "POST" }).catch(
+    () => undefined
+  )
+  throw new ApiError(
+    "Admin accounts can't sign in here. Use the Veridom admin console.",
+    403,
+    "SUPERADMIN_NOT_ALLOWED"
+  )
+}
+
 export const authApi = {
   register: async (payload: RegisterPayload) => {
     const response = await apiRequest<ApiSuccess<AuthUser>>(
@@ -64,7 +82,7 @@ export const authApi = {
       }
     )
 
-    return response.data
+    return rejectSuperAdmin(response.data)
   },
   logout: async () => {
     return apiRequest<ApiMessage>("/api/v1/auth/logout", {
@@ -79,7 +97,7 @@ export const authApi = {
   me: async () => {
     const response = await apiRequest<ApiSuccess<AuthUser>>("/api/v1/auth/me")
 
-    return response.data
+    return rejectSuperAdmin(response.data)
   },
   forgotPassword: async (payload: ForgotPasswordPayload) => {
     return apiRequest<ApiMessage>("/api/v1/auth/forgot-password", {

@@ -3,6 +3,7 @@ import type { Permission } from "@/lib/api/organizations"
 import {
   BadgeDollarSignIcon,
   BuildingIcon,
+  HistoryIcon,
   CalendarCheckIcon,
   HandshakeIcon,
   LayoutGridIcon,
@@ -68,6 +69,13 @@ const groups: Group[] = [
         icon: <BadgeDollarSignIcon />,
         prefix: true,
         needs: ["payout:manage"],
+      },
+      {
+        title: "Activity log",
+        path: "/lister/audit",
+        icon: <HistoryIcon />,
+        prefix: true,
+        needs: ["org:audit:read"],
       },
       {
         title: "Settings",

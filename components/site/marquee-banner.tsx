@@ -22,7 +22,7 @@ export function MarqueeBanner() {
 
   return (
     <div
-      className="group relative overflow-hidden bg-primary text-primary-foreground"
+      className="group relative overflow-hidden bg-panel text-panel-foreground"
       role="region"
       aria-label="Why Veridom"
     >
@@ -37,13 +37,13 @@ export function MarqueeBanner() {
             <span className="whitespace-nowrap">{text}</span>
             <span
               aria-hidden
-              className="ml-6 size-1 rounded-full bg-primary-foreground/40 sm:ml-8"
+              className="ml-6 size-1 rounded-full bg-panel-foreground/40 sm:ml-8"
             />
           </li>
         ))}
       </ul>
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-primary to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-primary to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-panel to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-panel to-transparent" />
     </div>
   )
 }

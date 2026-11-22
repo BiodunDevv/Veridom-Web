@@ -1,9 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Mail, Plus, Trash2 } from "lucide-react"
+import {
+  Loader2,
+  Mail,
+  MailPlus,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  Users,
+} from "lucide-react"
 
-import { PageHeader } from "@/components/account/page-header"
+import { ListerHero, initialsOf } from "@/components/lister/lister-ui"
 import { FormSelect } from "@/components/site/form-select"
 import { inputClass } from "@/components/site/field"
 import { Badge } from "@/components/ui/badge"
@@ -32,6 +40,7 @@ import {
   useUpdateMember,
 } from "@/features/lister/org-hooks"
 import { PERMISSIONS, type Permission } from "@/lib/api/organizations"
+import { PERMISSION_LABELS } from "@/lib/permissions"
 import { cn } from "@/lib/utils"
 
 const Panel = ({
@@ -123,7 +132,7 @@ function RoleDialog({ role }: { role?: Role }) {
                     : "border-input hover:bg-accent"
                 )}
               >
-                {permission}
+                {PERMISSION_LABELS[permission]}
               </button>
             )
           })}
@@ -171,9 +180,32 @@ export function TeamPage() {
 
   return (
     <>
-      <PageHeader
+      <ListerHero
+        icon={Users}
+        eyebrow="Team"
         title="Team"
         description="People, invitations and what each role can do."
+        stats={[
+          {
+            label: "Members",
+            value: members.length,
+            icon: Users,
+            tone: "good",
+          },
+          {
+            label: "Pending invites",
+            value: invites.length,
+            icon: MailPlus,
+            tone: invites.length ? "warn" : "default",
+            hint: "Invites last 7 days",
+          },
+          { label: "Roles", value: roles.length, icon: ShieldCheck },
+          {
+            label: "Suspended",
+            value: members.filter((m) => m.status === "SUSPENDED").length,
+            icon: Users,
+          },
+        ]}
       />
 
       <Panel title="Members">
@@ -183,13 +215,18 @@ export function TeamPage() {
               key={member.id}
               className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
             >
-              <div className="min-w-0">
-                <p className="truncate font-medium">
-                  {member.firstName} {member.lastName}
-                </p>
-                <p className="truncate text-sm text-muted-foreground">
-                  {member.email}
-                </p>
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15">
+                  {initialsOf(`${member.firstName} ${member.lastName}`)}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {member.firstName} {member.lastName}
+                  </p>
+                  <p className="truncate text-sm text-muted-foreground">
+                    {member.email}
+                  </p>
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {member.status === "SUSPENDED" ? (

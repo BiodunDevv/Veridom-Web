@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  devIndicators: false,
   async redirects() {
     return [
       { source: "/auth/login", destination: "/?auth=login", permanent: false },

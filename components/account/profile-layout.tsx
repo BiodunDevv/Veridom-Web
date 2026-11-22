@@ -15,10 +15,12 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
+import { ProfileDock } from "@/components/account/profile-dock"
 import { SiteFooter } from "@/components/site/site-footer"
 import { SiteHeader } from "@/components/site/site-header"
 import { Button } from "@/components/ui/button"
 import { useLogout, useMe } from "@/features/auth/hooks"
+import { useMine } from "@/features/lister/org-hooks"
 import { initialsOf } from "@/lib/initials"
 import { cn } from "@/lib/utils"
 
@@ -82,11 +84,16 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const me = useMe().data
   const logout = useLogout()
+  const mine = useMine().data
+  const hasLister = Boolean(mine?.organizations.length)
+  const visibleGroups = groups.filter(
+    (group) => group.label !== "Listing" || hasLister
+  )
 
   return (
     <div className="relative overflow-x-clip bg-background">
-      <SiteHeader />
-      <main className="bg-muted/60 px-5 py-8 sm:px-8 lg:px-12 lg:py-12">
+      <SiteHeader dock={false} />
+      <main className="bg-muted/60 px-4 py-6 pb-32 sm:px-8 lg:px-12 lg:py-12 lg:pb-12">
         <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-8">
           <aside className="flex flex-col gap-4 lg:sticky lg:top-28 lg:self-start">
             <div className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-md">
@@ -104,34 +111,10 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
             </div>
 
             <nav
-              aria-label="Profile"
-              className="flex gap-2 overflow-x-auto pb-1 lg:hidden"
-            >
-              {groups
-                .flatMap((g) => g.items)
-                .map((item) => (
-                  <Button
-                    key={item.href}
-                    asChild
-                    size="sm"
-                    variant={isActive(item, pathname) ? "default" : "outline"}
-                    className={cn(
-                      "shrink-0",
-                      !isActive(item, pathname) && "bg-card"
-                    )}
-                  >
-                    <Link href={item.href}>
-                      <item.icon /> {item.title}
-                    </Link>
-                  </Button>
-                ))}
-            </nav>
-
-            <nav
               aria-label="Profile sections"
               className="hidden flex-col gap-5 rounded-2xl bg-card p-3 shadow-md lg:flex"
             >
-              {groups.map((group) => (
+              {visibleGroups.map((group) => (
                 <div key={group.label} className="flex flex-col gap-1">
                   <p className="px-3 pt-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
                     {group.label}
@@ -172,6 +155,7 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
       <SiteFooter />
+      <ProfileDock />
     </div>
   )
 }

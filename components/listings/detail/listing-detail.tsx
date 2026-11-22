@@ -1,5 +1,6 @@
 "use client"
 
+import { ListingMapCard } from "@/components/map/listing-map-card"
 import Link from "next/link"
 import {
   ArrowLeft,
@@ -224,6 +225,14 @@ export function ListingDetail({ id }: { id: string }) {
                 </div>
               ))}
             </section>
+          ) : null}
+
+          {listing.latitude != null && listing.longitude != null ? (
+            <ListingMapCard
+              lat={listing.latitude}
+              lng={listing.longitude}
+              place={placeLabel(listing.location)}
+            />
           ) : null}
         </div>
 

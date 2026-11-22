@@ -8,7 +8,7 @@ import { About } from "./about"
 
 export function LandingPage() {
   return (
-    <div className="relative overflow-x-clip bg-background">
+    <div className="relative overflow-x-clip bg-background pb-24 lg:pb-0">
       <SiteHeader />
       {/* First screen: hero fills the viewport below the sticky header. */}
       <div className="flex min-h-[calc(100svh-5.75rem)] flex-col lg:h-[calc(100svh-6.25rem)] lg:overflow-hidden">

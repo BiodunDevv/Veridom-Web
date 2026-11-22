@@ -3,11 +3,28 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Loader2, Send } from "lucide-react"
+import {
+  AlertTriangle,
+  ArrowLeft,
+  BadgeCheck,
+  Banknote,
+  Building2,
+  Clock3,
+  FileCheck2,
+  Images,
+  Loader2,
+  Radio,
+  Send,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { PageHeader } from "@/components/account/page-header"
 import { StatusBadge } from "@/components/account/status-badge"
+import { ListerHero } from "@/components/lister/lister-ui"
+import {
+  ListingReadiness,
+  type ReadinessItem,
+} from "@/components/lister/listing-readiness"
 import { DocumentsManager } from "@/components/lister/documents-manager"
 import {
   ListingForm,
@@ -15,6 +32,7 @@ import {
   toInput,
   type Draft,
 } from "@/components/lister/listing-form"
+import { NewListingWizard } from "@/components/lister/new-listing-wizard"
 import { PhotosManager } from "@/components/lister/photos-manager"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
@@ -27,7 +45,9 @@ import {
 import {
   useCreateListing,
   useDeleteListing,
+  useDocuments,
   useListerListing,
+  usePhotos,
   useListingStatusAction,
   useSubmitListing,
   useUpdateListing,
@@ -52,14 +72,44 @@ function NewListing() {
         title="New listing"
         description="Start with the basics. You'll add photos and proof of ownership next."
       />
-      <ListingForm
-        isNew
+      <NewListingWizard
         draft={draft}
         onChange={setDraft}
         saving={create.isPending}
-        onSave={() => create.mutate(toInput(draft))}
+        onCreate={() => create.mutate(toInput(draft))}
       />
     </>
+  )
+}
+
+const noticeTone = {
+  good: "border-primary/25 bg-primary/10 [&_svg]:text-primary",
+  warn: "border-amber-500/30 bg-amber-500/10 [&_svg]:text-amber-600 dark:[&_svg]:text-amber-400",
+  bad: "border-destructive/30 bg-destructive/10 [&_svg]:text-destructive",
+} as const
+
+function Notice({
+  tone,
+  icon: Icon,
+  title,
+  children,
+}: {
+  tone: keyof typeof noticeTone
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div
+      role="status"
+      className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${noticeTone[tone]}`}
+    >
+      <Icon className="mt-0.5 size-4 shrink-0" />
+      <p>
+        <span className="font-semibold">{title}. </span>
+        {children}
+      </p>
+    </div>
   )
 }
 
@@ -83,6 +133,45 @@ function EditListing({ listing }: { listing: ListerListing }) {
     router.replace("/lister/listings")
   )
 
+  const photos = usePhotos(listing.id).data ?? []
+  const docs = useDocuments(listing.id).data ?? []
+  const readyPhotos = photos.filter((p) => p.status !== "REJECTED").length
+  const readyDocs = docs.filter((d) => d.status !== "REJECTED").length
+  const readiness: ReadinessItem[] = [
+    {
+      label: "Title and description",
+      hint: "A clear title and at least 20 characters.",
+      done: Boolean(listing.title && (listing.description?.length ?? 0) >= 20),
+    },
+    {
+      label: "Price and property type",
+      hint: "Set the rent and choose a type.",
+      done: Boolean(listing.priceKobo && listing.propertyTypeId),
+    },
+    {
+      label: "Location and address",
+      hint: "State, area and street address.",
+      done: Boolean(listing.stateId && listing.lgaId && listing.addressLine),
+    },
+    {
+      label: "Map pin",
+      hint: "Drop a pin so renters can find it.",
+      done: listing.latitude != null && listing.longitude != null,
+    },
+    {
+      label: "3 photos or more",
+      hint: `${readyPhotos} of 3 added.`,
+      done: readyPhotos >= 3,
+      href: "#photos-title",
+    },
+    {
+      label: "Proof of ownership",
+      hint: "Upload at least one document.",
+      done: readyDocs >= 1,
+      href: "#docs-title",
+    },
+  ]
+
   const locked = LOCKED.includes(listing.status)
   const editable = ["DRAFT", "REJECTED"].includes(listing.status)
   const canClose = can("listing:close")
@@ -102,16 +191,17 @@ function EditListing({ listing }: { listing: ListerListing }) {
   return (
     <>
       <BackLink />
-      <PageHeader
+      <ListerHero
+        icon={Building2}
+        eyebrow="Listing"
         title={listing.title}
         description={
           listing.moveInTotalKobo
             ? `Move-in total ${formatNaira(listing.moveInTotalKobo)} · renewal ${formatNaira(listing.renewalKobo)}`
-            : undefined
+            : "Edit the details, photos and proof of ownership."
         }
         actions={
           <>
-            <StatusBadge status={listing.status} />
             {editable ? (
               <Button
                 disabled={submit.isPending}
@@ -177,39 +267,78 @@ function EditListing({ listing }: { listing: ListerListing }) {
             ) : null}
           </>
         }
+        stats={[
+          {
+            label: "Status",
+            value: <StatusBadge status={listing.status} />,
+            icon: Radio,
+            tone: listing.status === "PUBLISHED" ? "good" : "default",
+          },
+          {
+            label: "Price",
+            value: formatNaira(listing.priceKobo),
+            icon: Banknote,
+            hint: listing.rentPeriod
+              ? `per ${listing.rentPeriod.toLowerCase()}`
+              : undefined,
+          },
+          {
+            label: "Photos",
+            value: `${readyPhotos}`,
+            icon: Images,
+            tone: readyPhotos >= 3 ? "good" : "warn",
+            hint: readyPhotos >= 3 ? "Enough to submit" : "Add at least 3",
+          },
+          {
+            label: "Documents",
+            value: `${readyDocs}`,
+            icon: FileCheck2,
+            tone: readyDocs ? "good" : "warn",
+            hint: readyDocs ? "Proof uploaded" : "Proof needed",
+          },
+        ]}
       />
 
       {listing.status === "REJECTED" && listing.latestReview?.reason ? (
-        <p className="rounded-xl bg-destructive/10 p-4 text-sm">
-          <span className="font-semibold">Changes needed: </span>
+        <Notice tone="bad" icon={AlertTriangle} title="Changes needed">
           {listing.latestReview.reason}
-        </p>
+        </Notice>
       ) : null}
       {listing.status === "PENDING_REVIEW" ? (
-        <p className="rounded-xl bg-secondary p-4 text-sm">
-          In review. You can edit again once the team has decided.
-        </p>
+        <Notice tone="warn" icon={Clock3} title="In review">
+          You can edit again once the team has decided.
+        </Notice>
       ) : null}
       {listing.status === "PUBLISHED" ? (
-        <p className="rounded-xl bg-secondary p-4 text-sm">
-          This listing is live. Changing the address, location, property type or
-          photos sends it back to review. Price and description edits stay live.
-        </p>
+        <Notice tone="good" icon={BadgeCheck} title="This listing is live">
+          Changing the address, location, property type or photos sends it back
+          to review. Price and description edits stay live.
+        </Notice>
       ) : null}
 
-      <ListingForm
-        draft={draft}
-        onChange={setDraft}
-        disabled={locked}
-        saving={update.isPending}
-        onSave={save}
-      />
-      <PhotosManager listingId={listing.id} disabled={locked || !canMedia} />
-      <DocumentsManager
-        listingId={listing.id}
-        disabled={locked || !canMedia}
-        canDelete={editable && canMedia}
-      />
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_19rem]">
+        <div className="flex min-w-0 flex-col gap-4">
+          <ListingForm
+            draft={draft}
+            onChange={setDraft}
+            disabled={locked}
+            saving={update.isPending}
+            onSave={save}
+          />
+          <PhotosManager
+            listingId={listing.id}
+            disabled={locked || !canMedia}
+          />
+          <DocumentsManager
+            listingId={listing.id}
+            disabled={locked || !canMedia}
+            canDelete={editable && canMedia}
+          />
+        </div>
+        <aside className="flex flex-col gap-4 lg:sticky lg:top-4">
+          {editable ? <ListingReadiness items={readiness} /> : null}
+        </aside>
+      </div>
     </>
   )
 }

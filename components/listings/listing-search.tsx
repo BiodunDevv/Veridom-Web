@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { ListingFilterBar } from "@/components/listings/listing-filters"
 import { ListingGrid } from "@/components/listings/listing-grid"
+import { cn } from "@/lib/utils"
 import { Section } from "@/components/landing/section"
 import {
   parseFilters,
@@ -38,7 +39,50 @@ export function ListingSearch() {
         <ListingFilterBar filters={filters} onChange={update} />
       </div>
       <Section id="results" className="pt-8 lg:pt-10">
-        <ListingGrid filters={filters} onClear={() => update({})} />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">
+            Available homes
+          </h2>
+          <div
+            role="group"
+            aria-label="Listing type"
+            className="inline-flex rounded-full bg-muted p-1"
+          >
+            {[
+              { label: "All", value: undefined },
+              { label: "For rent", value: "RENT" as const },
+              { label: "For sale", value: "SALE" as const },
+            ].map((tab) => {
+              const on = filters.listingType === tab.value
+              return (
+                <button
+                  key={tab.label}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => update({ ...filters, listingType: tab.value })}
+                  className={cn(
+                    "rounded-full px-4 py-1.5 text-sm font-semibold transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                    on
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+        <ListingGrid
+          filters={filters}
+          hasFilters={Object.values(filters).some(
+            (value) =>
+              value !== undefined &&
+              value !== "" &&
+              !(Array.isArray(value) && value.length === 0)
+          )}
+          onClear={() => update({})}
+        />
       </Section>
     </>
   )

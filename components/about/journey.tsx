@@ -1,6 +1,7 @@
 import Image from "next/image"
 
 import { Section } from "@/components/landing/section"
+import { CountUp } from "@/components/ui/count-up"
 
 const stats = [
   { value: "200+", label: "Happy Customers" },
@@ -14,6 +15,9 @@ export function Journey() {
       <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
         <div className="flex flex-col gap-6 lg:gap-10">
           <div className="flex flex-col gap-3">
+            <span className="animate-appear inline-flex items-center gap-2 self-start rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+              <span className="size-1.5 rounded-full bg-primary" /> Since 2010
+            </span>
             <h1 className="animate-appear text-3xl font-semibold tracking-tight sm:text-4xl lg:text-5xl">
               Our Journey
             </h1>
@@ -28,14 +32,17 @@ export function Journey() {
               trust of countless clients.
             </p>
           </div>
-          <dl className="grid grid-cols-3 gap-3 lg:gap-5">
+          <dl
+            className="animate-appear grid grid-cols-3 gap-3 lg:gap-5"
+            style={{ "--appear-delay": "200ms" } as React.CSSProperties}
+          >
             {stats.map((stat) => (
               <div
                 key={stat.label}
-                className="flex flex-col gap-0.5 rounded-xl bg-card p-3 shadow-md sm:p-5"
+                className="flex flex-col gap-0.5 rounded-xl bg-card p-3 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl sm:p-5"
               >
                 <dd className="order-1 text-2xl font-bold sm:text-3xl lg:text-4xl">
-                  {stat.value}
+                  <CountUp value={stat.value} />
                 </dd>
                 <dt className="order-2 text-xs font-medium text-muted-foreground sm:text-sm lg:text-base">
                   {stat.label}
@@ -44,22 +51,33 @@ export function Journey() {
             ))}
           </dl>
         </div>
-        <div className="relative isolate h-[300px] overflow-hidden rounded-xl bg-secondary sm:h-[420px] lg:h-[480px]">
+
+        {/* The hand reaches in from past the right edge of the screen. */}
+        <div className="relative isolate h-[320px] overflow-hidden rounded-3xl bg-secondary sm:h-[440px] lg:[margin-right:calc(-1*max(3rem,(100vw-1280px)/2+3rem))] lg:h-[500px] lg:rounded-r-none">
           <Image
             src="/landing/abstract-lines.svg"
             alt=""
+            aria-hidden
             fill
             unoptimized
-            className="-z-10 object-cover opacity-30 dark:opacity-40"
+            className="-z-10 object-cover opacity-40 dark:opacity-50"
           />
-          <Image
-            src="/about/house.png"
-            alt="A hand presenting a model of a modern home"
-            fill
-            priority
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            className="object-contain object-right"
+          <div
+            aria-hidden
+            className="absolute right-[8%] bottom-[-20%] -z-10 size-[70%] rounded-full bg-primary/20 blur-3xl"
           />
+          <div className="absolute inset-0 animate-hand-in motion-reduce:animate-none">
+            <div className="size-full animate-float motion-reduce:animate-none">
+              <Image
+                src="/about/house.png"
+                alt="A hand presenting a model of a modern home"
+                fill
+                priority
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-contain object-right drop-shadow-2xl"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </Section>

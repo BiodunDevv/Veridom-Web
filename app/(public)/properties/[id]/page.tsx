@@ -9,10 +9,14 @@ export const metadata: Metadata = {
     "View photos, features and pricing, then book a viewing or reserve this verified property.",
 }
 
-export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ListingPage({
+  params,
+}: {
+  params: Promise<{ id: string }>
+}) {
   const { id } = await params
   return (
-    <SiteShell>
+    <SiteShell cta={false}>
       <ListingDetail id={id} />
     </SiteShell>
   )

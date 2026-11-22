@@ -5,7 +5,7 @@ import { SiteShell } from "@/components/site/site-shell"
 
 export default function AcceptInvitePage() {
   return (
-    <SiteShell>
+    <SiteShell cta={false}>
       <Suspense>
         <AcceptInvite />
       </Suspense>

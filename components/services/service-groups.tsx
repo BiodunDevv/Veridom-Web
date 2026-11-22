@@ -3,7 +3,7 @@ import { SectionHeading } from "@/components/landing/section-heading"
 
 import { ServiceCallout, ServiceCard, type Service } from "./service-card"
 
-const selling: Service[] = [
+export const selling: Service[] = [
   {
     title: "Valuation Mastery",
     icon: "/services/valuation.svg",
@@ -26,7 +26,7 @@ const selling: Service[] = [
   },
 ]
 
-const management: Service[] = [
+export const management: Service[] = [
   {
     title: "Tenant Harmony",
     icon: "/services/tenant.svg",
@@ -49,7 +49,7 @@ const management: Service[] = [
   },
 ]
 
-const investing: Service[] = [
+export const investing: Service[] = [
   {
     title: "Market Insight",
     icon: "/services/market.svg",

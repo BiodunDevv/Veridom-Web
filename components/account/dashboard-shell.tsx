@@ -13,6 +13,7 @@ export function DashboardShell({
   label,
   footer,
   headerExtra,
+  dock,
   children,
 }: {
   groups: SidebarNavGroup[]
@@ -20,6 +21,7 @@ export function DashboardShell({
   label: string
   footer?: React.ReactNode
   headerExtra?: React.ReactNode
+  dock?: React.ReactNode
   children: React.ReactNode
 }) {
   const pathname = usePathname()
@@ -35,9 +37,10 @@ export function DashboardShell({
       />
       <SidebarInset className="min-w-0">
         <AppHeader pathname={pathname} groups={groups} extra={headerExtra} />
-        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 md:p-6">
+        <div className="flex flex-1 flex-col gap-6 overflow-y-auto p-4 pb-28 md:p-6 md:pb-6 [&>*]:shrink-0">
           {children}
         </div>
+        {dock}
       </SidebarInset>
     </SidebarProvider>
   )
