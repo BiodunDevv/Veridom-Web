@@ -1,15 +1,18 @@
 import type { Metadata } from "next"
+
+import { pageMetadata } from "@/lib/site"
 import Link from "next/link"
 import { EyeOff, Lock, UserCheck } from "lucide-react"
 
 import { LegalPage } from "@/components/legal/legal-page"
 import { SiteShell } from "@/components/site/site-shell"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Privacy Policy | Veridom",
   description:
     "What personal information Veridom collects, why we use it, who sees it and the choices you have.",
-}
+  path: "/privacy",
+})
 
 export default function PrivacyPage() {
   return (

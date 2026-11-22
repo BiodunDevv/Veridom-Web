@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
-export default function CustomerLayout({ children }: { children: React.ReactNode }) {
+export default function CustomerLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return <AccountGate>{children}</AccountGate>
 }

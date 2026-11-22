@@ -1,15 +1,18 @@
 import type { Metadata } from "next"
+
+import { pageMetadata } from "@/lib/site"
 import Link from "next/link"
 import { BadgeCheck, Handshake, ShieldCheck } from "lucide-react"
 
 import { LegalPage } from "@/components/legal/legal-page"
 import { SiteShell } from "@/components/site/site-shell"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Terms and Conditions | Veridom",
   description:
     "The rules for using Veridom to search, view, reserve and list verified properties in Nigeria.",
-}
+  path: "/terms",
+})
 
 export default function TermsPage() {
   return (

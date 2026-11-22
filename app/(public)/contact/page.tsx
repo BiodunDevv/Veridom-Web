@@ -1,16 +1,18 @@
 import type { Metadata } from "next"
 
+import { pageMetadata } from "@/lib/site"
 import { ContactStrip } from "@/components/contact/contact-strip"
 import { Offices } from "@/components/contact/offices"
 import { InquiryForm } from "@/components/contact/inquiry-form"
 import { ContactHero } from "@/components/contact/contact-hero"
 import { SiteShell } from "@/components/site/site-shell"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contact | Veridom",
   description:
     "Talk to the Veridom team about buying, renting, selling or investing in verified properties.",
-}
+  path: "/contact",
+})
 
 export default function ContactPage() {
   return (

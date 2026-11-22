@@ -477,5 +477,7 @@ input:-webkit-autofill:focus {
   caret-color: var(--foreground);
   box-shadow: none;
   background-clip: text;
-  transition: background-color 600000s 0s, color 600000s 0s;
+  transition:
+    background-color 600000s 0s,
+    color 600000s 0s;
 }

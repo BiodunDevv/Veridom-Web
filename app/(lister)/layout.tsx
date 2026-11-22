@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
-export default function ListerLayout({ children }: { children: React.ReactNode }) {
+export default function ListerLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return <ListerGate>{children}</ListerGate>
 }
