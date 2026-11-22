@@ -54,6 +54,7 @@ export function LocationPicker({
   lng,
   onChange,
   onUseAddress,
+  onNeighbourhood,
   focus,
   disabled,
 }: {
@@ -62,6 +63,8 @@ export function LocationPicker({
   lng?: number
   onChange: (lat: number | null, lng: number | null) => void
   onUseAddress?: (address: string) => void
+  /** The neighbourhood the pin sits in, from the map data ("" when unknown). */
+  onNeighbourhood?: (name: string) => void
   disabled?: boolean
 }) {
   const { resolvedTheme } = useTheme()
@@ -70,6 +73,7 @@ export function LocationPicker({
   const mapRef = React.useRef<maplibregl.Map | null>(null)
   const pinRef = React.useRef<maplibregl.Marker | null>(null)
   const changeRef = React.useRef(onChange)
+  const onNeighbourhoodRef = React.useRef(onNeighbourhood)
   const [query, setQuery] = React.useState("")
   const [results, setResults] = React.useState<Result[]>([])
   const [searching, setSearching] = React.useState(false)
@@ -81,7 +85,8 @@ export function LocationPicker({
 
   React.useEffect(() => {
     changeRef.current = onChange
-  }, [onChange])
+    onNeighbourhoodRef.current = onNeighbourhood
+  }, [onChange, onNeighbourhood])
 
   const place = React.useCallback((nextLat: number, nextLng: number) => {
     if (!inNigeria(nextLat, nextLng)) {
@@ -250,15 +255,23 @@ export function LocationPicker({
 
   // Name the place under the pin.
   React.useEffect(() => {
-    if (!hasPin) return
+    if (!hasPin) {
+      onNeighbourhoodRef.current?.("")
+      return
+    }
     const controller = new AbortController()
     const timer = window.setTimeout(async () => {
       try {
         const res = await fetch(`/api/geo/reverse?lat=${lat}&lng=${lng}`, {
           signal: controller.signal,
         })
-        const data = (await res.json()) as { label?: string; name?: string }
+        const data = (await res.json()) as {
+          label?: string
+          name?: string
+          neighbourhood?: string
+        }
         setNear(data.label || data.name || "")
+        onNeighbourhoodRef.current?.(data.neighbourhood ?? "")
       } catch {
         // aborted or offline
       }

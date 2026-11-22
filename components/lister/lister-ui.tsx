@@ -4,6 +4,7 @@ import * as React from "react"
 import { Loader2, type LucideIcon } from "lucide-react"
 
 import { PatternBg } from "@/components/ui/pattern-bg"
+import { RowsSkeleton } from "@/components/ui/page-skeletons"
 import { cn } from "@/lib/utils"
 
 export type HeroStat = {
@@ -140,23 +141,7 @@ export function ListerEmpty({
 
 /** Placeholder rows while a list loads. */
 export function ListSkeleton({ rows = 4 }: { rows?: number }) {
-  return (
-    <ul className="grid gap-3" aria-busy aria-label="Loading">
-      {Array.from({ length: rows }).map((_, i) => (
-        <li
-          key={i}
-          className="flex items-center gap-4 rounded-xl bg-card p-5 shadow-md"
-        >
-          <span className="size-12 animate-pulse rounded-xl bg-muted" />
-          <span className="flex flex-1 flex-col gap-2">
-            <span className="h-4 w-1/3 animate-pulse rounded bg-muted" />
-            <span className="h-3 w-1/5 animate-pulse rounded bg-muted/70" />
-          </span>
-          <span className="h-6 w-20 animate-pulse rounded-full bg-muted" />
-        </li>
-      ))}
-    </ul>
-  )
+  return <RowsSkeleton rows={rows} />
 }
 
 export function Spinner({ className }: { className?: string }) {

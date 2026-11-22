@@ -16,7 +16,7 @@ export const metadata: Metadata = pageMetadata({
 
 export default function PropertiesPage() {
   return (
-    <SiteShell cta={false}>
+    <SiteShell cta={false} footer={false}>
       <PropertiesHero />
       <Suspense>
         <ListingSearch />

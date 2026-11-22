@@ -7,6 +7,8 @@ import {
   CalendarCheckIcon,
   HandshakeIcon,
   LayoutGridIcon,
+  MessageSquareIcon,
+  ShieldCheckIcon,
   SettingsIcon,
   UsersIcon,
 } from "lucide-react"
@@ -45,6 +47,13 @@ const groups: Group[] = [
         needs: ["inspection:manage"],
       },
       {
+        title: "Messages",
+        path: "/lister/inquiries",
+        icon: <MessageSquareIcon />,
+        prefix: true,
+        needs: ["inquiry:read:any", "inquiry:read:assigned", "inquiry:respond"],
+      },
+      {
         title: "Deals",
         path: "/lister/deals",
         icon: <HandshakeIcon />,
@@ -56,6 +65,12 @@ const groups: Group[] = [
   {
     label: "Lister",
     items: [
+      {
+        title: "My role",
+        path: "/lister/role",
+        icon: <ShieldCheckIcon />,
+        prefix: true,
+      },
       {
         title: "Team",
         path: "/lister/team",

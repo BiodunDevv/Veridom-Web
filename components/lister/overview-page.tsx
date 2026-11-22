@@ -331,7 +331,13 @@ export function ListerOverviewPage() {
             <CircleCheck className="size-5 text-primary" /> What you can do
           </h2>
           <p className="text-sm text-muted-foreground">
-            These come from your role. Ask an owner if you need more.
+            These come from your role. Ask an owner if you need more.{" "}
+            <Link
+              href="/lister/role"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              See your full role
+            </Link>
           </p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">

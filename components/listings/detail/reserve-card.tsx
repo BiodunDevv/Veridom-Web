@@ -3,6 +3,7 @@
 import { ShieldCheck } from "lucide-react"
 
 import { ReserveDialog } from "@/components/listings/detail/reserve-dialog"
+import { MessageDialog } from "@/components/listings/detail/message-dialog"
 import { ViewingDialog } from "@/components/listings/detail/viewing-dialog"
 import { Button } from "@/components/ui/button"
 import { useAuthModal } from "@/components/auth/auth-modal"
@@ -26,7 +27,8 @@ export function ReserveCard({ listing }: { listing: ListingDetail }) {
         <span className="font-medium text-foreground">
           {listing.lister.name}
         </span>
-        . Contact details are shared after you book a viewing or reserve.
+        . Ask a question, book a viewing or reserve. Contact details are shared
+        after a confirmed viewing.
       </p>
       {signedIn ? (
         <div className="flex flex-col gap-2">
@@ -43,6 +45,11 @@ export function ReserveCard({ listing }: { listing: ListingDetail }) {
             </p>
           )}
           <ViewingDialog listingId={listing.id} title={listing.title} />
+          <MessageDialog
+            listingId={listing.id}
+            title={listing.title}
+            listerName={listing.lister.name}
+          />
         </div>
       ) : (
         <div className="flex flex-col gap-2">

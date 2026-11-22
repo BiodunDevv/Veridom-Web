@@ -2,6 +2,9 @@
 
 import type { ReactNode } from "react"
 
+import { RealtimeBridge } from "@/features/realtime/hooks"
+import { ReturnToApp } from "@/components/site/return-to-app"
+import { PwaRegister } from "@/components/app/pwa-register"
 import { CookieNotice } from "@/components/site/cookie-notice"
 import { TrackingParams } from "@/components/site/tracking-params"
 import { Toaster } from "@/components/ui/sonner"
@@ -24,6 +27,9 @@ export function AppProviders({ children }: AppProvidersProps) {
         <Toaster />
         <CookieNotice />
         <TrackingParams />
+        <PwaRegister />
+        <ReturnToApp />
+        <RealtimeBridge />
       </QueryProvider>
     </ReduxProvider>
   )

@@ -8,6 +8,7 @@ import {
   Bath,
   Building2,
   Check,
+  ChevronDown,
   CircleCheck,
   Circle,
   Loader2,
@@ -135,6 +136,86 @@ function Preview({ draft }: { draft: Draft }) {
   )
 }
 
+/** Phone summary: a one-line peek that opens into the preview and checklist. */
+function MobileSummary({
+  draft,
+  items,
+}: {
+  draft: Draft
+  items: { label: string; done: boolean }[]
+}) {
+  const [open, setOpen] = React.useState(false)
+  const done = items.filter((i) => i.done).length
+  const price = draft.price
+    ? formatNaira(Math.round(Number(draft.price) * 100))
+    : null
+
+  return (
+    <section className="rounded-2xl bg-card shadow-md lg:hidden">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-3 rounded-2xl p-3.5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          <Building2 className="size-5" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span
+            className={cn(
+              "block truncate text-sm font-semibold",
+              !draft.title && "text-muted-foreground"
+            )}
+          >
+            {draft.title || "Your listing preview"}
+          </span>
+          <span className="block text-xs text-muted-foreground">
+            {price ? `${price} · ` : ""}
+            {done}/{items.length} ready to submit
+          </span>
+        </span>
+        <ChevronDown
+          className={cn(
+            "size-4 shrink-0 text-muted-foreground transition-transform",
+            open && "rotate-180"
+          )}
+          aria-hidden
+        />
+      </button>
+      <div className="h-1 overflow-hidden bg-muted">
+        <div
+          className="h-full bg-primary transition-[width] duration-500"
+          style={{ width: `${(done / items.length) * 100}%` }}
+        />
+      </div>
+      {open ? (
+        <div className="flex animate-in flex-col gap-4 p-3.5 fade-in-0 slide-in-from-top-2">
+          <Preview draft={draft} />
+          <ul className="flex flex-col gap-2">
+            {items.map((item) => (
+              <li
+                key={item.label}
+                className={cn(
+                  "flex items-center gap-2 text-sm",
+                  item.done ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                {item.done ? (
+                  <CircleCheck className="size-4 shrink-0 text-primary" />
+                ) : (
+                  <Circle className="size-4 shrink-0" />
+                )}
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
 /** Step by step new listing with a live preview and a submit checklist. */
 export function NewListingWizard({
   draft,
@@ -149,6 +230,7 @@ export function NewListingWizard({
 }) {
   const [index, setIndex] = React.useState(0)
   const [reached, setReached] = React.useState(0)
+  const topRef = React.useRef<HTMLDivElement>(null)
   const step = steps[index]
   const last = index === steps.length - 1
   const items = checklist(draft)
@@ -158,18 +240,49 @@ export function NewListingWizard({
   const go = (to: number) => {
     setIndex(to)
     setReached((r) => Math.max(r, to))
-    window.scrollTo({ top: 0, behavior: "smooth" })
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
   const next = () => (last ? onCreate() : canNext && go(index + 1))
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-8">
-      <div className="flex min-w-0 flex-col gap-5">
+      <div
+        ref={topRef}
+        className="flex min-w-0 scroll-mt-4 flex-col gap-4 sm:gap-5"
+      >
         <nav
           aria-label="Listing steps"
           className="rounded-2xl bg-card p-3 shadow-md sm:p-4"
         >
-          <ol className="flex items-center gap-1 overflow-x-auto sm:gap-2">
+          <div className="flex flex-col gap-2.5 md:hidden">
+            <div className="flex items-baseline justify-between gap-3 px-1">
+              <p className="text-base font-semibold">{step.label}</p>
+              <p className="text-xs font-medium text-muted-foreground tabular-nums">
+                Step {index + 1} of {steps.length}
+              </p>
+            </div>
+            <p className="px-1 text-sm text-muted-foreground">{step.hint}</p>
+            <div className="flex gap-1.5" role="presentation">
+              {steps.map((s, i) => (
+                <button
+                  key={s.key}
+                  type="button"
+                  aria-label={`Go to ${s.label}`}
+                  disabled={i > reached}
+                  onClick={() => go(i)}
+                  className="group relative h-6 flex-1 outline-none disabled:cursor-not-allowed"
+                >
+                  <span
+                    className={cn(
+                      "absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 rounded-full transition-colors",
+                      i <= index ? "bg-primary" : "bg-muted"
+                    )}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+          <ol className="hidden items-center gap-1 overflow-x-auto sm:gap-2 md:flex">
             {steps.map((s, i) => {
               const active = i === index
               const done = i < index
@@ -226,10 +339,9 @@ export function NewListingWizard({
               )
             })}
           </ol>
-          <p className="mt-2 px-2 text-xs font-medium text-muted-foreground md:hidden">
-            Step {index + 1} of {steps.length}: {step.label}
-          </p>
         </nav>
+
+        <MobileSummary draft={draft} items={items} />
 
         <div
           key={step.key}
@@ -245,34 +357,50 @@ export function NewListingWizard({
           />
         </div>
 
-        <div className="flex items-center gap-3 pt-1 sm:justify-between">
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className={cn(index === 0 && "invisible")}
-            disabled={index === 0 || saving}
-            onClick={() => go(index - 1)}
-          >
-            <ArrowLeft /> Back
-          </Button>
-          <Button
-            type="button"
-            size="lg"
-            className="flex-1 sm:flex-none"
-            disabled={
-              !canNext || saving || (last && draft.title.trim().length < 5)
-            }
-            onClick={next}
-          >
-            {saving ? <Loader2 className="animate-spin" /> : null}
-            {last ? "Save draft and add photos" : "Continue"}
-            {!last && !saving ? <ArrowRight /> : null}
-          </Button>
+        <div className="sticky bottom-[6.5rem] z-10 flex flex-col gap-2 rounded-2xl border bg-background/95 px-3 pt-3 pb-4 shadow-lg backdrop-blur-md md:static md:border-0 md:bg-transparent md:p-0 md:shadow-none md:backdrop-blur-none">
+          {!canNext ? (
+            <p
+              role="status"
+              className="text-center text-xs font-medium text-muted-foreground md:text-left"
+            >
+              Add a title of at least 5 characters to continue.
+            </p>
+          ) : null}
+          <div className="flex items-center gap-3 md:justify-between">
+            {index > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="h-11 shrink-0 px-4"
+                disabled={saving}
+                onClick={() => go(index - 1)}
+              >
+                <ArrowLeft /> Back
+              </Button>
+            ) : (
+              <span className="hidden md:block" />
+            )}
+            <Button
+              type="button"
+              size="lg"
+              className="h-11 min-w-0 flex-1 md:flex-none"
+              disabled={
+                !canNext || saving || (last && draft.title.trim().length < 5)
+              }
+              onClick={next}
+            >
+              {saving ? <Loader2 className="animate-spin" /> : null}
+              <span className="truncate">
+                {last ? "Save draft and add photos" : "Continue"}
+              </span>
+              {!last && !saving ? <ArrowRight /> : null}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <aside className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start">
+      <aside className="hidden flex-col gap-4 lg:sticky lg:top-4 lg:flex lg:self-start">
         <div className="flex flex-col gap-2">
           <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             How renters will see it

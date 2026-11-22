@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <SiteShell cta={false}>
+    <SiteShell cta={false} footer={false}>
       <NotFoundView />
     </SiteShell>
   )

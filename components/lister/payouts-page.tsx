@@ -1,20 +1,13 @@
 "use client"
 
-import {
-  Banknote,
-  CheckCircle2,
-  Landmark,
-  Loader2,
-  ShieldCheck,
-  Timer,
-  UserCheck,
-} from "lucide-react"
+import { Banknote, Landmark, ShieldCheck, Timer, UserCheck } from "lucide-react"
 
 import { StatusBadge } from "@/components/account/status-badge"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ListerHero } from "@/components/lister/lister-ui"
-import { inputClass } from "@/components/site/field"
-import { Button } from "@/components/ui/button"
+import { BankAccountForm } from "@/components/account/bank-account-form"
 import { PatternBg } from "@/components/ui/pattern-bg"
+import { bankName } from "@/lib/banks"
 import { usePayoutAccount, useSavePayout } from "@/features/lister/ops-hooks"
 
 const STEPS = [
@@ -41,9 +34,10 @@ const STEPS = [
 ]
 
 export function PayoutsPage() {
-  const account = usePayoutAccount(true).data
+  const accountQuery = usePayoutAccount(true)
+  const account = accountQuery.data
   const save = useSavePayout()
-  const hasAccount = Boolean(account?.accountName)
+  const hasAccount = Boolean(account)
 
   return (
     <>
@@ -86,82 +80,50 @@ export function PayoutsPage() {
 
       <div className="grid gap-4 lg:grid-cols-[1.15fr_1fr]">
         <div className="flex flex-col gap-4">
-          <div className="relative isolate flex min-h-44 flex-col justify-between overflow-hidden rounded-2xl bg-panel p-6 text-panel-foreground shadow-lg">
-            <PatternBg className="-z-10 object-right opacity-30 mix-blend-soft-light" />
-            <div className="flex items-start justify-between">
-              <span className="grid size-10 place-items-center rounded-full bg-panel-foreground/15">
-                <Landmark className="size-5" aria-hidden />
-              </span>
-              {account?.status ? (
-                <StatusBadge status={account.status} />
-              ) : (
-                <span className="rounded-full bg-panel-foreground/15 px-2.5 py-0.5 text-xs font-medium">
-                  Not added
+          {accountQuery.isLoading ? (
+            <Skeleton className="h-44 w-full rounded-2xl" />
+          ) : (
+            <div className="relative isolate flex min-h-44 flex-col justify-between overflow-hidden rounded-2xl bg-panel p-6 text-panel-foreground shadow-lg">
+              <PatternBg className="-z-10 object-right opacity-30 mix-blend-soft-light" />
+              <div className="flex items-start justify-between">
+                <span className="grid size-10 place-items-center rounded-full bg-panel-foreground/15">
+                  <Landmark className="size-5" aria-hidden />
                 </span>
-              )}
+                {account?.status ? (
+                  <StatusBadge status={account.status} />
+                ) : (
+                  <span className="rounded-full bg-panel-foreground/15 px-2.5 py-0.5 text-xs font-medium">
+                    Not added
+                  </span>
+                )}
+              </div>
+              <div>
+                <p className="font-mono text-xl tracking-[0.25em] tabular-nums">
+                  {hasAccount
+                    ? `•••• •••• ${account?.accountLast4 ?? "••••"}`
+                    : "•••• •••• ••••"}
+                </p>
+                <p className="mt-1 text-sm opacity-80">
+                  {account?.accountName ?? "Add an account to get paid"}
+                  {bankName(account?.bankCode)
+                    ? ` · ${bankName(account?.bankCode)}`
+                    : ""}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="font-mono text-xl tracking-[0.25em] tabular-nums">
-                {hasAccount
-                  ? `•••• •••• ${account?.accountNumber?.slice(-4) ?? "••••"}`
-                  : "•••• •••• ••••"}
-              </p>
-              <p className="mt-1 text-sm opacity-80">
-                {account?.accountName ?? "Add an account to get paid"}
-              </p>
-            </div>
-          </div>
+          )}
 
           <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-md sm:p-6">
             <div>
               <h2 className="text-lg font-semibold">
                 {hasAccount ? "Change payout account" : "Add payout account"}
               </h2>
-              <p className="text-sm text-muted-foreground">
-                We look up the account holder from the bank. You don&apos;t type
-                the name.
-              </p>
             </div>
-            <form
-              className="grid gap-3 sm:grid-cols-2"
-              onSubmit={(e) => {
-                e.preventDefault()
-                const data = new FormData(e.currentTarget)
-                save.mutate({
-                  accountNumber: String(data.get("accountNumber")),
-                  bankCode: String(data.get("bankCode")),
-                })
-              }}
-            >
-              <input
-                name="accountNumber"
-                required
-                inputMode="numeric"
-                pattern="\d{10}"
-                placeholder="10-digit account number"
-                aria-label="Account number"
-                className={inputClass}
-              />
-              <input
-                name="bankCode"
-                required
-                placeholder="Bank code"
-                aria-label="Bank code"
-                className={inputClass}
-              />
-              <Button
-                type="submit"
-                disabled={save.isPending}
-                className="sm:col-span-2"
-              >
-                {save.isPending ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 />
-                )}
-                Save payout account
-              </Button>
-            </form>
+            <BankAccountForm
+              pending={save.isPending}
+              submitLabel="Save payout account"
+              onSubmit={(value) => save.mutate(value)}
+            />
           </section>
         </div>
 

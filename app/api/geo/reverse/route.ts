@@ -2,8 +2,19 @@ import { NextResponse } from "next/server"
 
 import { inNigeria } from "@/lib/geo/nigeria"
 
+type Named = { name?: string }
 type Feature = {
-  properties: { name?: string; full_address?: string; place_formatted?: string }
+  properties: {
+    name?: string
+    full_address?: string
+    place_formatted?: string
+    context?: {
+      neighborhood?: Named
+      locality?: Named
+      district?: Named
+      place?: Named
+    }
+  }
 }
 
 /** Turns a pin into a readable place. */
@@ -42,5 +53,10 @@ export async function GET(request: Request) {
     name: first?.properties.name ?? "",
     label:
       first?.properties.full_address ?? first?.properties.place_formatted ?? "",
+    // The neighbourhood the pin sits in, so the form can offer to use it.
+    neighbourhood:
+      first?.properties.context?.neighborhood?.name ??
+      first?.properties.context?.locality?.name ??
+      "",
   })
 }

@@ -1,3 +1,5 @@
+import { Suspense } from "react"
+
 import { ListingEditor } from "@/components/lister/listing-editor"
 
 export default async function Page({
@@ -6,5 +8,10 @@ export default async function Page({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  return <ListingEditor id={id} />
+  // The editor reads ?confirm=available from the URL.
+  return (
+    <Suspense fallback={null}>
+      <ListingEditor id={id} />
+    </Suspense>
+  )
 }

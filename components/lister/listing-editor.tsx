@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   AlertTriangle,
   ArrowLeft,
@@ -20,6 +20,7 @@ import { toast } from "sonner"
 
 import { PageHeader } from "@/components/account/page-header"
 import { StatusBadge } from "@/components/account/status-badge"
+import { useConfirm } from "@/components/lister/confirm-dialog"
 import { ListerHero } from "@/components/lister/lister-ui"
 import {
   ListingReadiness,
@@ -55,6 +56,7 @@ import {
 import { usePermissions } from "@/features/lister/org-hooks"
 import { type ListerListing } from "@/lib/api/lister"
 import { formatNaira } from "@/lib/format"
+import { DetailSkeleton } from "@/components/ui/page-skeletons"
 
 const LOCKED = ["PENDING_REVIEW", "SUSPENDED", "CLOSED"]
 
@@ -172,6 +174,14 @@ function EditListing({ listing }: { listing: ListerListing }) {
     },
   ]
 
+  const confirm = useConfirm()
+  const params = useSearchParams()
+  const [bannerDone, setBannerDone] = React.useState(false)
+  const askAvailable =
+    params.get("confirm") === "available" &&
+    ["PUBLISHED", "PAUSED"].includes(listing.status) &&
+    can("listing:close") &&
+    !bannerDone
   const locked = LOCKED.includes(listing.status)
   const editable = ["DRAFT", "REJECTED"].includes(listing.status)
   const canClose = can("listing:close")
@@ -191,6 +201,31 @@ function EditListing({ listing }: { listing: ListerListing }) {
   return (
     <>
       <BackLink />
+      {askAvailable ? (
+        <div className="flex flex-col gap-3 rounded-2xl bg-primary/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">Is this property still available?</p>
+            <p className="text-sm text-muted-foreground">
+              Confirming keeps it in search and stops the reminder emails.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              disabled={status.confirm.isPending}
+              onClick={() =>
+                status.confirm.mutate(undefined, {
+                  onSuccess: () => setBannerDone(true),
+                })
+              }
+            >
+              Yes, still available
+            </Button>
+            <Button variant="outline" onClick={() => setBannerDone(true)}>
+              Not now
+            </Button>
+          </div>
+        </div>
+      ) : null}
       <ListerHero
         icon={Building2}
         eyebrow="Listing"
@@ -260,7 +295,15 @@ function EditListing({ listing }: { listing: ListerListing }) {
               <Button
                 variant="ghost"
                 disabled={remove.isPending}
-                onClick={() => remove.mutate()}
+                onClick={() =>
+                  confirm.ask({
+                    title: "Delete this listing?",
+                    description: `"${listing.title}" and its photos and documents will be permanently removed. This can't be undone.`,
+                    confirmLabel: "Delete listing",
+                    tone: "danger",
+                    run: () => remove.mutateAsync(),
+                  })
+                }
               >
                 Delete
               </Button>
@@ -339,6 +382,7 @@ function EditListing({ listing }: { listing: ListerListing }) {
           {editable ? <ListingReadiness items={readiness} /> : null}
         </aside>
       </div>
+      {confirm.dialog}
     </>
   )
 }
@@ -347,12 +391,7 @@ export function ListingEditor({ id }: { id?: string }) {
   const query = useListerListing(id)
 
   if (!id) return <NewListing />
-  if (query.isPending)
-    return (
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading listing…
-      </p>
-    )
+  if (query.isPending) return <DetailSkeleton />
   if (!query.data)
     return <RetryState label="this listing" onRetry={() => query.refetch()} />
   return <EditListing key={query.data.id} listing={query.data} />

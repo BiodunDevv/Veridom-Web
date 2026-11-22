@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Building2, Check, ChevronsUpDown, UserRound } from "lucide-react"
+import { Building2, Check, ChevronsUpDown, LogOut, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -52,8 +52,11 @@ export function OrgSwitcher() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => router.push("/account?lister=new")}>
+          <Plus /> Add a lister
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => switchOrg.mutate(null)}>
-          <UserRound /> Myself (customer)
+          <LogOut /> Leave lister area
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

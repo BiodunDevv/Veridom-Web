@@ -29,3 +29,15 @@ export const useLocations = (parentId?: string, enabled = true) =>
     staleTime: FIVE_MINUTES,
     enabled,
   })
+
+/** Debounced neighbourhood search under one LGA. */
+export const useLocationSearch = (q: string, parentId?: string) => {
+  const term = q.trim()
+  return useQuery({
+    queryKey: ["catalog", "location-search", parentId ?? "any", term] as const,
+    queryFn: () => catalogApi.searchLocations(term, parentId),
+    enabled: term.length >= 2 && Boolean(parentId),
+    staleTime: FIVE_MINUTES,
+    placeholderData: (previous) => previous,
+  })
+}

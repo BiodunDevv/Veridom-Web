@@ -85,7 +85,7 @@ export default async function ListingPage({
 }) {
   const { id } = await params
   return (
-    <SiteShell cta={false}>
+    <SiteShell cta={false} footer={false}>
       <ListingDetail id={id} />
     </SiteShell>
   )

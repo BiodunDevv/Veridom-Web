@@ -1,6 +1,10 @@
 "use client"
 
-import { useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import { organizationsApi, type Permission } from "@/lib/api/organizations"
 import { queryKeys } from "@/lib/query/keys"
@@ -139,10 +143,17 @@ export const useDeleteRole = () =>
     invalidate: [queryKeys.org.roles],
   })
 
+export const AUDIT_PAGE = 50
+
+/** Newest first; "load more" pages back with `before=<id of the last item>`. */
 export const useAuditLogs = (enabled: boolean) =>
-  useQuery({
-    queryKey: queryKeys.org.audit,
-    queryFn: () => organizationsApi.auditLogs(50),
+  useInfiniteQuery({
+    queryKey: [...queryKeys.org.audit, "pages"],
+    queryFn: ({ pageParam }) =>
+      organizationsApi.auditLogs(AUDIT_PAGE, pageParam || undefined),
+    initialPageParam: "",
+    getNextPageParam: (last) =>
+      last.length >= AUDIT_PAGE ? String(last.at(-1)?.id) : undefined,
     enabled,
   })
 

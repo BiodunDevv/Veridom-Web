@@ -1,6 +1,8 @@
 import { apiRequest } from "@/lib/api/client"
 import type { ApiSuccess } from "@/lib/api/types"
 import type { Deal, Inspection } from "@/lib/api/deals"
+import { normalizeDeal, normalizeInspection } from "@/lib/api/normalize"
+import type { PhotoVariant } from "@/lib/api/listings"
 
 export type ListingStatus =
   | "DRAFT"
@@ -55,6 +57,8 @@ export type ListerListing = ListingInput & {
   renewalKobo?: number | null
   updatedAt?: string
   latestReview?: { reason?: string | null } | null
+  /** Cover photo variants, when the list endpoint includes them. */
+  cover?: PhotoVariant[]
   fees?: FeeInput[]
   amenityIds?: string[]
 }
@@ -95,11 +99,20 @@ export type Availability = {
   blackoutDates: string[]
   windows: { weekday: number; startsAt: string; endsAt: string }[]
 }
+export type PayoutAccountStatus =
+  | "UNVERIFIED"
+  | "COOLING_OFF"
+  | "ACTIVE"
+  | "DISABLED"
+
+/** The API never returns the full number, only the last four digits. */
 export type PayoutAccount = {
-  accountNumber?: string
+  id: string
   bankCode?: string
+  accountLast4?: string
   accountName?: string
-  status?: string
+  status?: PayoutAccountStatus
+  activeFrom?: string | null
 }
 
 type Listish<T> = T[] | { items: T[] }
@@ -174,12 +187,15 @@ export const listerApi = {
     send<unknown>("DELETE", `${L}/listings/${id}/documents/${documentId}`),
 
   inspections: async () =>
-    unwrap(await get<Listish<Inspection>>(`${L}/inspections`)),
+    unwrap(await get<Listish<Inspection>>(`${L}/inspections`)).map(
+      normalizeInspection
+    ),
   acceptInspection: (id: string) =>
     send<Inspection>("POST", `${L}/inspections/${id}/accept`, {}),
   declineInspection: (id: string, reason: string) =>
     send<Inspection>("POST", `${L}/inspections/${id}/decline`, { reason }),
-  inspection: (id: string) => get<Inspection>(`${L}/inspections/${id}`),
+  inspection: async (id: string) =>
+    normalizeInspection(await get<Inspection>(`${L}/inspections/${id}`)),
   proposeInspection: (id: string, startsAt: string) =>
     send<Inspection>("POST", `${L}/inspections/${id}/propose`, { startsAt }),
   cancelInspection: (id: string) =>
@@ -206,17 +222,33 @@ export const listerApi = {
     get<Availability | null>(`${L}/listings/${id}/availability`),
   saveAvailability: (id: string, body: Availability) =>
     send<Availability>("PUT", `${L}/listings/${id}/availability`, body),
-  deal: (id: string) =>
-    get<Deal & { transfer?: { status: string; amountKobo?: number } | null }>(
-      `${L}/deals/${id}`
+  deal: async (id: string) =>
+    normalizeDeal(
+      await get<
+        Deal & {
+          transfer?: {
+            status: string
+            releaseAfter?: string | null
+            blockReason?: string | null
+          } | null
+        }
+      >(`${L}/deals/${id}`)
     ),
-  deals: async () => unwrap(await get<Listish<Deal>>(`${L}/deals`)),
+  deals: async () =>
+    unwrap(await get<Listish<Deal>>(`${L}/deals`)).map(normalizeDeal),
   handoverCode: (id: string) =>
     send<{ code: string; expiresAt: string }>(
       "POST",
       `${L}/deals/${id}/handover-code`
     ),
-  payoutAccount: () => get<PayoutAccount | null>(`${L}/payout-account`),
+  /** A list, newest first (empty = none yet). We use the newest live one. */
+  payoutAccount: async (): Promise<PayoutAccount | null> => {
+    const data = await get<PayoutAccount[] | PayoutAccount | null>(
+      `${L}/payout-account`
+    )
+    const list = Array.isArray(data) ? data : data ? [data] : []
+    return list.find((a) => a.status !== "DISABLED") ?? null
+  },
   savePayoutAccount: (body: { accountNumber: string; bankCode: string }) =>
     send<PayoutAccount>("PUT", `${L}/payout-account`, body),
 }

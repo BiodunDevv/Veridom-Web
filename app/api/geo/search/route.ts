@@ -46,6 +46,13 @@ export async function GET(request: Request) {
   if (scope === "state") {
     url.searchParams.set("types", "region")
     url.searchParams.set("limit", "1")
+  } else if (scope === "place") {
+    // Neighbourhood-level places, optionally boxed in to one LGA.
+    url.searchParams.set("types", "neighborhood,locality,place,district")
+    const bbox = searchParams.get("bbox")
+    if (bbox && /^(-?\d+(\.\d+)?,){3}-?\d+(\.\d+)?$/.test(bbox)) {
+      url.searchParams.set("bbox", bbox)
+    }
   } else if (scope === "area") {
     url.searchParams.set("types", "region,district,place,locality,neighborhood")
     url.searchParams.set("limit", "3")

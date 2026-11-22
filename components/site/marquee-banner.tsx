@@ -22,11 +22,11 @@ export function MarqueeBanner() {
 
   return (
     <div
-      className="group relative overflow-hidden bg-panel text-panel-foreground"
+      className="group relative h-8 overflow-hidden bg-panel text-panel-foreground"
       role="region"
       aria-label="Why Veridom"
     >
-      <ul className="flex w-max animate-marquee items-center py-2 text-xs font-medium group-hover:[animation-play-state:paused] sm:text-[13px]">
+      <ul className="flex w-max animate-marquee items-center text-xs leading-8 font-medium group-hover:[animation-play-state:paused] sm:text-[13px]">
         {track.map(({ icon: Icon, text }, i) => (
           <li
             key={i}

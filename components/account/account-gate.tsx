@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { ShellSkeleton } from "@/components/ui/page-skeletons"
 
 import { ProfileLayout } from "@/components/account/profile-layout"
 import {
@@ -31,16 +31,7 @@ export function AccountGate({ children }: { children: React.ReactNode }) {
     }
   }, [dispatch, me, meQuery.isError, pathname, router])
 
-  if (!me) {
-    return (
-      <main className="grid min-h-svh place-items-center bg-background px-6">
-        <div className="flex items-center gap-3 rounded-xl bg-card px-4 py-3 text-sm text-muted-foreground shadow-md">
-          <Loader2 className="size-4 animate-spin" />
-          Loading your account…
-        </div>
-      </main>
-    )
-  }
+  if (!me) return <ShellSkeleton variant="site" label="Loading your account" />
 
   return <ProfileLayout>{children}</ProfileLayout>
 }

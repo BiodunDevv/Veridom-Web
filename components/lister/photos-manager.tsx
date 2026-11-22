@@ -18,6 +18,7 @@ import {
   PhotoLinkDialog,
   parseLinks,
 } from "@/components/lister/photo-link-dialog"
+import { useConfirm } from "@/components/lister/confirm-dialog"
 import { PhotoViewer } from "@/components/lister/photo-viewer"
 import { Button } from "@/components/ui/button"
 import {
@@ -42,6 +43,15 @@ export function PhotosManager({
   const upload = useUploadPhoto(listingId)
   const order = useOrderPhotos(listingId)
   const remove = useRemovePhoto(listingId)
+  const confirm = useConfirm()
+  const askRemove = (id: string, after?: () => void) =>
+    confirm.ask({
+      title: "Delete this photo?",
+      description: "It will be removed from the listing. This can't be undone.",
+      confirmLabel: "Delete photo",
+      tone: "danger",
+      run: () => remove.mutateAsync(id).then(() => after?.()),
+    })
   const [busy, setBusy] = React.useState(0)
   const [viewing, setViewing] = React.useState<number | null>(null)
   const [linkOpen, setLinkOpen] = React.useState(false)
@@ -240,7 +250,7 @@ export function PhotosManager({
                     variant="ghost"
                     aria-label="Delete photo"
                     disabled={disabled || remove.isPending}
-                    onClick={() => remove.mutate(photo.id)}
+                    onClick={() => askRemove(photo.id)}
                   >
                     <Trash2 />
                   </Button>
@@ -264,14 +274,14 @@ export function PhotosManager({
           order.mutate([id, ...photos.map((p) => p.id).filter((x) => x !== id)])
         }
         onDelete={(id) =>
-          remove.mutate(id, {
-            onSuccess: () =>
-              setViewing((i) =>
-                photos.length <= 1 ? null : Math.min(i ?? 0, photos.length - 2)
-              ),
-          })
+          askRemove(id, () =>
+            setViewing((i) =>
+              photos.length <= 1 ? null : Math.min(i ?? 0, photos.length - 2)
+            )
+          )
         }
       />
+      {confirm.dialog}
       <PhotoLinkDialog
         open={linkOpen}
         onOpenChange={setLinkOpen}

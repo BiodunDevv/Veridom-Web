@@ -1,24 +1,20 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 
 import { PageHeader } from "@/components/account/page-header"
 import { StatusBadge } from "@/components/account/status-badge"
 import { RetryState } from "@/components/retry-state"
 import { useListerDeal } from "@/features/lister/ops-hooks"
 import { formatDate, formatNaira } from "@/lib/format"
+import { DetailSkeleton } from "@/components/ui/page-skeletons"
 
 export function ListerDealDetailPage({ id }: { id: string }) {
   const query = useListerDeal(id)
   const deal = query.data
 
-  if (query.isPending)
-    return (
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading…
-      </p>
-    )
+  if (query.isPending) return <DetailSkeleton />
   if (!deal)
     return <RetryState label="this deal" onRetry={() => query.refetch()} />
 
@@ -54,11 +50,35 @@ export function ListerDealDetailPage({ id }: { id: string }) {
               )}
             </dd>
           </div>
-          {deal.transfer?.amountKobo ? (
+          {deal.listerAmountKobo ? (
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Latest transfer</dt>
+              <dt className="text-muted-foreground">You receive</dt>
+              <dd className="font-semibold">
+                {formatNaira(deal.listerAmountKobo)}
+              </dd>
+            </div>
+          ) : null}
+          {deal.commissionListerKobo ? (
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Veridom fee (your half)</dt>
               <dd className="font-medium">
-                {formatNaira(deal.transfer.amountKobo)}
+                {formatNaira(deal.commissionListerKobo)}
+              </dd>
+            </div>
+          ) : null}
+          {deal.transfer?.releaseAfter ? (
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Payout released after</dt>
+              <dd className="font-medium">
+                {formatDate(deal.transfer.releaseAfter)}
+              </dd>
+            </div>
+          ) : null}
+          {deal.transfer?.blockReason ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-muted-foreground">Why it&apos;s blocked</dt>
+              <dd className="text-right font-medium text-destructive">
+                {deal.transfer.blockReason}
               </dd>
             </div>
           ) : null}

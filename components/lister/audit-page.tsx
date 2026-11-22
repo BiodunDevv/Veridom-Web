@@ -11,6 +11,7 @@ import {
   UserPlus,
   Users,
   type LucideIcon,
+  Loader2,
 } from "lucide-react"
 
 import {
@@ -21,6 +22,7 @@ import {
   timeAgo,
 } from "@/components/lister/lister-ui"
 import { RetryState } from "@/components/retry-state"
+import { Button } from "@/components/ui/button"
 import { useAuditLogs } from "@/features/lister/org-hooks"
 import { formatDate } from "@/lib/format"
 
@@ -54,7 +56,7 @@ const dayLabel = (value?: string) => {
 
 export function AuditPage() {
   const query = useAuditLogs(true)
-  const logs = React.useMemo(() => query.data ?? [], [query.data])
+  const logs = React.useMemo(() => query.data?.pages.flat() ?? [], [query.data])
 
   const groups = React.useMemo(() => {
     const map = new Map<string, typeof logs>()
@@ -147,6 +149,19 @@ export function AuditPage() {
               </ol>
             </section>
           ))}
+          {query.hasNextPage ? (
+            <Button
+              variant="outline"
+              className="self-center"
+              disabled={query.isFetchingNextPage}
+              onClick={() => void query.fetchNextPage()}
+            >
+              {query.isFetchingNextPage ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : null}
+              Load older activity
+            </Button>
+          ) : null}
         </div>
       )}
     </>

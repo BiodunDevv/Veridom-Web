@@ -8,6 +8,7 @@ import { ArrowLeft, Clock, Loader2, ShieldAlert } from "lucide-react"
 import { toast } from "sonner"
 
 import { ReasonDialog } from "@/components/account/deal-actions"
+import { BankAccountForm } from "@/components/account/bank-account-form"
 import { PageHeader } from "@/components/account/page-header"
 import { StatusBadge } from "@/components/account/status-badge"
 import { RetryState } from "@/components/retry-state"
@@ -29,6 +30,7 @@ import { formatCountdown, useCountdown } from "@/hooks/use-countdown"
 import { dealsApi, type Deal } from "@/lib/api/deals"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { formatDate, formatNaira } from "@/lib/format"
+import { DetailSkeleton } from "@/components/ui/page-skeletons"
 
 function Panel({
   title,
@@ -129,42 +131,11 @@ function RefundPanel({
 
   return (
     <Panel title="Where should we send your refund?">
-      <form
-        className="grid gap-3 sm:grid-cols-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          const data = new FormData(e.currentTarget)
-          save.mutate({
-            accountNumber: String(data.get("accountNumber")),
-            bankCode: String(data.get("bankCode")),
-          })
-        }}
-      >
-        <input
-          name="accountNumber"
-          required
-          inputMode="numeric"
-          pattern="\d{10}"
-          placeholder="10-digit account number"
-          aria-label="Account number"
-          className="h-12 rounded-lg border border-input bg-background px-4 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        />
-        <input
-          name="bankCode"
-          required
-          placeholder="Bank code"
-          aria-label="Bank code"
-          className="h-12 rounded-lg border border-input bg-background px-4 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-        />
-        <Button
-          type="submit"
-          disabled={save.isPending}
-          className="sm:col-span-2"
-        >
-          {save.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-          Save bank details
-        </Button>
-      </form>
+      <BankAccountForm
+        pending={save.isPending}
+        submitLabel="Send my refund here"
+        onSubmit={(value) => save.mutate(value)}
+      />
     </Panel>
   )
 }
@@ -193,11 +164,7 @@ export function DealDetailPage({ id }: { id: string }) {
   const deal = dealQuery.data
 
   if (dealQuery.isPending) {
-    return (
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" /> Loading your deal…
-      </p>
-    )
+    return <DetailSkeleton />
   }
   if (!deal)
     return <RetryState label="this deal" onRetry={() => dealQuery.refetch()} />

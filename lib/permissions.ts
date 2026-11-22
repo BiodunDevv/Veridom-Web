@@ -20,6 +20,26 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "org:audit:read": "View the activity log",
 }
 
+/** One-line explanations shown next to each permission. */
+export const PERMISSION_HINTS: Record<Permission, string> = {
+  "listing:create": "Start new listings and drafts",
+  "listing:update:any": "Change any listing in this lister",
+  "listing:update:assigned": "Change only listings assigned to them",
+  "listing:close": "Pause, resume or close listings",
+  "media:manage": "Upload and remove photos and proof documents",
+  "inquiry:read:any": "See every customer inquiry",
+  "inquiry:read:assigned": "See inquiries on their own listings",
+  "inquiry:respond": "Reply to customers",
+  "inspection:manage": "Accept, decline or move viewings",
+  "deal:manage": "Handle reservations and handover codes",
+  "payout:manage": "Change where money is paid out",
+  "member:invite": "Send invitations to new people",
+  "member:manage": "Change roles, suspend or remove people",
+  "role:manage": "Create and edit roles",
+  "org:update": "Edit the lister's name and contacts",
+  "org:audit:read": "See who did what",
+}
+
 export const PERMISSION_GROUPS: { label: string; keys: Permission[] }[] = [
   {
     label: "Listings",
@@ -58,6 +78,10 @@ export const ROUTE_NEEDS: { path: string; needs: Permission[] }[] = [
       "listing:close",
       "media:manage",
     ],
+  },
+  {
+    path: "/lister/inquiries",
+    needs: ["inquiry:read:any", "inquiry:read:assigned", "inquiry:respond"],
   },
   { path: "/lister/viewings", needs: ["inspection:manage"] },
   { path: "/lister/deals", needs: ["deal:manage", "payout:manage"] },

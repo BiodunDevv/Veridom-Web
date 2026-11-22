@@ -20,8 +20,11 @@ import { cn } from "@/lib/utils"
 
 import { navLinks } from "./nav"
 
-/** Full-screen menu for visitors on phones. Signed-in people use the tab bar. */
-export function GuestMenu() {
+/**
+ * Full-screen menu on phones for marketing pages. Signed-in people get a way
+ * into their profile instead of the sign-up buttons.
+ */
+export function GuestMenu({ signedIn = false }: { signedIn?: boolean }) {
   const pathname = usePathname()
   const auth = useAuthModal()
   const [open, setOpen] = React.useState(false)
@@ -91,12 +94,33 @@ export function GuestMenu() {
           })}
         </nav>
         <div className="flex flex-col gap-3 border-t p-4 sm:p-8">
-          <Button size="lg" onClick={() => openAuth("register")}>
-            Get started
-          </Button>
-          <Button variant="outline" size="lg" onClick={() => openAuth("login")}>
-            Log in
-          </Button>
+          {signedIn ? (
+            <>
+              <SheetClose asChild>
+                <Button asChild size="lg">
+                  <Link href="/account">My profile</Link>
+                </Button>
+              </SheetClose>
+              <SheetClose asChild>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/properties">Browse properties</Link>
+                </Button>
+              </SheetClose>
+            </>
+          ) : (
+            <>
+              <Button size="lg" onClick={() => openAuth("register")}>
+                Get started
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => openAuth("login")}
+              >
+                Log in
+              </Button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

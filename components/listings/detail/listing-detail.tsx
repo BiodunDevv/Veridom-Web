@@ -38,9 +38,28 @@ const furnishingLabel = {
 
 function Skeleton() {
   return (
-    <Section id="listing" className="pt-6">
-      <div className="h-8 w-1/2 animate-pulse rounded bg-muted" />
-      <div className="h-96 animate-pulse rounded-xl bg-muted" />
+    <Section id="listing" className="pt-6" aria-busy aria-label="Loading">
+      <div className="flex flex-col gap-2">
+        <div className="h-8 w-3/5 animate-pulse rounded bg-muted" />
+        <div className="h-4 w-2/5 animate-pulse rounded bg-muted/70" />
+      </div>
+      <div className="grid gap-2 sm:grid-cols-[2fr_1fr] sm:grid-rows-2">
+        <div className="aspect-[16/10] animate-pulse rounded-2xl bg-muted sm:row-span-2 sm:aspect-auto sm:min-h-80" />
+        <div className="hidden animate-pulse rounded-2xl bg-muted sm:block" />
+        <div className="hidden animate-pulse rounded-2xl bg-muted sm:block" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_22rem]">
+        <div className="flex flex-col gap-3">
+          {[80, 100, 90, 60].map((w) => (
+            <div
+              key={w}
+              className="h-4 animate-pulse rounded bg-muted"
+              style={{ width: `${w}%` }}
+            />
+          ))}
+        </div>
+        <div className="h-56 animate-pulse rounded-2xl bg-muted" />
+      </div>
     </Section>
   )
 }

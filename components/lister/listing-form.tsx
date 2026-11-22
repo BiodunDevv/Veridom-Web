@@ -1,13 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { Loader2, Plus, Trash2 } from "lucide-react"
+import { Check, Loader2, Plus, Trash2 } from "lucide-react"
 
 import dynamic from "next/dynamic"
 
 import { Field, inputClass } from "@/components/site/field"
 import { FormSelect } from "@/components/site/form-select"
 import { Button } from "@/components/ui/button"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
+import { NeighbourhoodPicker } from "@/components/lister/neighbourhood-picker"
+import { Switch } from "@/components/ui/switch"
+import { formatNaira } from "@/lib/format"
 import {
   useAmenities,
   useLocations,
@@ -142,6 +150,48 @@ const feeTypes: { value: FeeInput["feeType"]; label: string }[] = [
   { value: "OTHER", label: "Other" },
 ]
 
+/** Keep digits and at most one decimal point with two places (kobo). */
+const cleanMoney = (raw: string) => {
+  const [whole, ...rest] = raw.replace(/[^\d.]/g, "").split(".")
+  const cents = rest.join("").slice(0, 2)
+  const head = whole.replace(/^0+(?=\d)/, "").slice(0, 12)
+  return rest.length ? `${head || "0"}.${cents}` : head
+}
+
+const showMoney = (clean: string) => {
+  const [whole, cents] = clean.split(".")
+  const head = whole ? Number(whole).toLocaleString("en-NG") : ""
+  return cents === undefined ? head : `${head || "0"}.${cents}`
+}
+
+/** Naira field: a \u20A6 prefix, thousands separators while you type, kobo allowed. */
+function MoneyInput({
+  value,
+  onChange,
+  ...props
+}: Omit<React.ComponentProps<"input">, "value" | "onChange"> & {
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <InputGroup className="h-12 rounded-lg bg-background">
+      <InputGroupAddon align="inline-start" className="pl-3.5">
+        <span className="text-base font-semibold text-muted-foreground">
+          {"\u20A6"}
+        </span>
+      </InputGroupAddon>
+      <InputGroupInput
+        inputMode="decimal"
+        autoComplete="off"
+        value={showMoney(cleanMoney(value))}
+        onChange={(e) => onChange(cleanMoney(e.target.value))}
+        className="h-full text-base md:text-base"
+        {...props}
+      />
+    </InputGroup>
+  )
+}
+
 function Card({
   title,
   hint,
@@ -190,10 +240,12 @@ export function ListingForm({
     draft.stateId || undefined,
     Boolean(draft.stateId)
   ).data
-  const areas = useLocations(
+  const [pinNeighbourhood, setPinNeighbourhood] = React.useState("")
+  const areasQuery = useLocations(
     draft.lgaId || undefined,
     Boolean(draft.lgaId)
-  ).data
+  )
+  const areas = areasQuery.data
   const clusters = useAmenities().data
   // What the map should show for the State / LGA / Neighbourhood selected.
   const areaFocus = React.useMemo<AreaFocus | null>(() => {
@@ -246,6 +298,14 @@ export function ListingForm({
       {...props}
     />
   )
+  const rentNaira = Number(draft.price) || 0
+  const feeNaira = (when: DraftFee["frequency"]) =>
+    draft.fees
+      .filter((f) => f.frequency === when)
+      .reduce((n, f) => n + (Number(f.amount) || 0), 0)
+  const moveInNaira =
+    rentNaira + feeNaira("FIRST_PAYMENT") + feeNaira("RECURRING")
+  const renewalNaira = rentNaira + feeNaira("RECURRING")
   const setFee = (index: number, patch: Partial<DraftFee>) =>
     set({
       fees: draft.fees.map((f, i) => (i === index ? { ...f, ...patch } : f)),
@@ -343,8 +403,16 @@ export function ListingForm({
           hint="Enter naira. We store and show exact amounts."
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label={rent ? "Rent per period (₦)" : "Sale price (₦)"}>
-              {text("price", { inputMode: "numeric", placeholder: "3500000" })}
+            <Field label={rent ? "Rent per period" : "Sale price"}>
+              <MoneyInput
+                value={draft.price}
+                onChange={(price) => set({ price })}
+                disabled={disabled}
+                placeholder="3,500,000"
+                aria-label={
+                  rent ? "Rent per period in naira" : "Sale price in naira"
+                }
+              />
             </Field>
             {rent ? (
               <Field label="Rent period">
@@ -366,97 +434,154 @@ export function ListingForm({
           </div>
 
           {rent ? (
-            <div className="flex flex-col gap-3 border-t pt-4">
-              <h3 className="text-sm font-semibold">Fees</h3>
-              {draft.fees.map((fee, index) => (
-                <div
-                  key={index}
-                  className="grid items-end gap-2 sm:grid-cols-[1.2fr_1fr_1fr_auto_auto]"
-                >
-                  <FormSelect
-                    aria-label="Fee type"
-                    placeholder="Fee"
-                    disabled={disabled}
-                    value={fee.feeType}
-                    onChange={(e) =>
-                      setFee(index, {
-                        feeType: e.target.value as FeeInput["feeType"],
-                      })
-                    }
-                    options={feeTypes}
-                  />
-                  <input
-                    aria-label="Fee amount in naira"
-                    inputMode="numeric"
-                    placeholder="Amount (₦)"
-                    disabled={disabled}
-                    value={fee.amount}
-                    onChange={(e) => setFee(index, { amount: e.target.value })}
-                    className={inputClass}
-                  />
-                  <FormSelect
-                    aria-label="Frequency"
-                    placeholder="When"
-                    disabled={disabled}
-                    value={fee.frequency}
-                    onChange={(e) =>
-                      setFee(index, {
-                        frequency: e.target.value as FeeInput["frequency"],
-                      })
-                    }
-                    options={[
-                      { value: "FIRST_PAYMENT", label: "First payment" },
-                      { value: "RECURRING", label: "Every renewal" },
-                    ]}
-                  />
-                  <label className="flex h-12 items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={fee.refundable}
-                      disabled={disabled}
-                      onChange={(e) =>
-                        setFee(index, { refundable: e.target.checked })
-                      }
-                      className="size-4 accent-[var(--primary)]"
-                    />{" "}
-                    Refundable
-                  </label>
+            <div className="flex flex-col gap-4 border-t pt-5">
+              <div>
+                <h3 className="text-base font-semibold">Fees</h3>
+                <p className="text-sm text-muted-foreground">
+                  Extra charges renters pay on top of the rent.
+                </p>
+              </div>
+
+              {draft.fees.length === 0 ? (
+                <p className="rounded-xl border border-dashed bg-muted/30 px-4 py-5 text-center text-sm text-muted-foreground">
+                  No extra fees. Add a caution deposit, service charge or legal
+                  fee below.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-3">
+                  {draft.fees.map((fee, index) => (
+                    <li
+                      key={index}
+                      className="flex flex-col gap-3 rounded-xl border bg-muted/30 p-3.5 sm:p-4"
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-3">
+                          <FormSelect
+                            aria-label="Fee type"
+                            placeholder="Fee"
+                            disabled={disabled}
+                            value={fee.feeType}
+                            onChange={(e) =>
+                              setFee(index, {
+                                feeType: e.target.value as FeeInput["feeType"],
+                              })
+                            }
+                            options={feeTypes}
+                          />
+                          <MoneyInput
+                            value={fee.amount}
+                            onChange={(amount) => setFee(index, { amount })}
+                            disabled={disabled}
+                            placeholder="Amount"
+                            aria-label="Fee amount in naira"
+                          />
+                          <FormSelect
+                            aria-label="Frequency"
+                            placeholder="When"
+                            disabled={disabled}
+                            value={fee.frequency}
+                            onChange={(e) =>
+                              setFee(index, {
+                                frequency: e.target
+                                  .value as FeeInput["frequency"],
+                              })
+                            }
+                            options={[
+                              {
+                                value: "FIRST_PAYMENT",
+                                label: "First payment",
+                              },
+                              { value: "RECURRING", label: "Every renewal" },
+                            ]}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="mt-0.5 shrink-0 text-muted-foreground hover:text-destructive"
+                          aria-label="Remove fee"
+                          disabled={disabled}
+                          onClick={() =>
+                            set({
+                              fees: draft.fees.filter((_, i) => i !== index),
+                            })
+                          }
+                        >
+                          <Trash2 />
+                        </Button>
+                      </div>
+                      <label className="flex w-fit cursor-pointer items-center gap-2.5 text-sm">
+                        <Switch
+                          checked={fee.refundable}
+                          disabled={disabled}
+                          onCheckedChange={(refundable) =>
+                            setFee(index, { refundable })
+                          }
+                        />
+                        Refundable
+                        <span className="text-xs text-muted-foreground">
+                          {fee.refundable
+                            ? "Returned to the renter"
+                            : "Not returned"}
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex flex-wrap gap-2" aria-label="Add a fee">
+                {feeTypes.map((type) => (
                   <Button
+                    key={type.value}
                     type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Remove fee"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full"
                     disabled={disabled}
                     onClick={() =>
-                      set({ fees: draft.fees.filter((_, i) => i !== index) })
+                      set({
+                        fees: [
+                          ...draft.fees,
+                          {
+                            feeType: type.value,
+                            amount: "",
+                            frequency:
+                              type.value === "SERVICE_CHARGE"
+                                ? "RECURRING"
+                                : "FIRST_PAYMENT",
+                            refundable: type.value === "CAUTION_DEPOSIT",
+                          },
+                        ],
+                      })
                     }
                   >
-                    <Trash2 />
+                    <Plus /> {type.label}
                   </Button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="self-start"
-                disabled={disabled}
-                onClick={() =>
-                  set({
-                    fees: [
-                      ...draft.fees,
-                      {
-                        feeType: "CAUTION_DEPOSIT",
-                        amount: "",
-                        frequency: "FIRST_PAYMENT",
-                        refundable: false,
-                      },
-                    ],
-                  })
-                }
-              >
-                <Plus /> Add a fee
-              </Button>
+                ))}
+              </div>
+
+              {rentNaira > 0 ? (
+                <dl className="grid gap-px overflow-hidden rounded-xl border bg-border text-sm sm:grid-cols-2">
+                  <div className="flex flex-col gap-0.5 bg-card p-3.5">
+                    <dt className="text-xs font-medium text-muted-foreground">
+                      Estimated move-in total
+                    </dt>
+                    <dd className="text-lg font-semibold tabular-nums">
+                      {formatNaira(moveInNaira * 100)}
+                    </dd>
+                  </div>
+                  <div className="flex flex-col gap-0.5 bg-card p-3.5">
+                    <dt className="text-xs font-medium text-muted-foreground">
+                      Estimated renewal
+                    </dt>
+                    <dd className="text-lg font-semibold tabular-nums">
+                      {formatNaira(renewalNaira * 100)}
+                    </dd>
+                  </div>
+                </dl>
+              ) : null}
             </div>
           ) : null}
         </Card>
@@ -530,16 +655,14 @@ export function ListingForm({
               />
             </Field>
             <Field label="Neighbourhood">
-              <FormSelect
-                aria-label="Neighbourhood"
-                placeholder="Choose"
-                disabled={disabled || !draft.lgaId}
+              <NeighbourhoodPicker
+                lgaId={draft.lgaId || undefined}
+                lgaName={lgas?.find((l) => l.id === draft.lgaId)?.name}
+                stateName={states?.find((x) => x.id === draft.stateId)?.name}
                 value={draft.areaId}
-                onChange={(e) => set({ areaId: e.target.value })}
-                options={(areas ?? []).map((a) => ({
-                  value: a.id,
-                  label: a.name,
-                }))}
+                onChange={(areaId) => set({ areaId })}
+                suggestion={pinNeighbourhood}
+                disabled={disabled}
               />
             </Field>
             <Field label="Street address" className="sm:col-span-3">
@@ -559,6 +682,7 @@ export function ListingForm({
                   })
                 }
                 onUseAddress={(address) => set({ addressLine: address })}
+                onNeighbourhood={setPinNeighbourhood}
               />
             </div>
           </div>
@@ -566,44 +690,72 @@ export function ListingForm({
       ) : null}
 
       {show("amenities") && clusters?.length ? (
-        <Card title="Amenities">
-          {clusters.map((cluster) => (
-            <fieldset
-              key={cluster.id}
-              className="flex flex-wrap items-center gap-2"
-            >
-              <legend className="sr-only">{cluster.name}</legend>
-              <span className="w-28 shrink-0 text-xs font-medium text-muted-foreground">
-                {cluster.name}
-              </span>
-              {cluster.amenities.map((amenity) => {
-                const on = draft.amenityIds.includes(amenity.id)
-                return (
-                  <button
-                    key={amenity.id}
-                    type="button"
-                    aria-pressed={on}
-                    disabled={disabled}
-                    onClick={() =>
-                      set({
-                        amenityIds: on
-                          ? draft.amenityIds.filter((id) => id !== amenity.id)
-                          : [...draft.amenityIds, amenity.id],
-                      })
-                    }
-                    className={cn(
-                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
-                      on
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-input hover:bg-accent"
-                    )}
-                  >
-                    {amenity.name}
-                  </button>
-                )
-              })}
-            </fieldset>
-          ))}
+        <Card
+          title="Amenities"
+          hint={
+            draft.amenityIds.length
+              ? `${draft.amenityIds.length} selected`
+              : "Tap everything the property has."
+          }
+        >
+          <div className="flex flex-col divide-y">
+            {clusters.map((cluster) => {
+              const picked = cluster.amenities.filter((a) =>
+                draft.amenityIds.includes(a.id)
+              ).length
+              return (
+                <fieldset
+                  key={cluster.id}
+                  className="flex min-w-0 flex-col gap-2.5 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:gap-6"
+                >
+                  <legend className="sr-only">{cluster.name}</legend>
+                  <span className="flex items-center justify-between gap-2 sm:w-36 sm:shrink-0 sm:pt-1.5">
+                    <span className="text-sm font-semibold sm:text-xs sm:font-medium sm:text-muted-foreground">
+                      {cluster.name}
+                    </span>
+                    {picked ? (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary tabular-nums">
+                        {picked}/{cluster.amenities.length}
+                      </span>
+                    ) : null}
+                  </span>
+                  <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+                    {cluster.amenities.map((amenity) => {
+                      const on = draft.amenityIds.includes(amenity.id)
+                      return (
+                        <button
+                          key={amenity.id}
+                          type="button"
+                          aria-pressed={on}
+                          disabled={disabled}
+                          onClick={() =>
+                            set({
+                              amenityIds: on
+                                ? draft.amenityIds.filter(
+                                    (id) => id !== amenity.id
+                                  )
+                                : [...draft.amenityIds, amenity.id],
+                            })
+                          }
+                          className={cn(
+                            "inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-[background-color,border-color,color,transform] outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:opacity-50 sm:min-h-9",
+                            on
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-input hover:bg-accent"
+                          )}
+                        >
+                          {on ? (
+                            <Check className="size-3.5" aria-hidden />
+                          ) : null}
+                          {amenity.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </fieldset>
+              )
+            })}
+          </div>
         </Card>
       ) : null}
 

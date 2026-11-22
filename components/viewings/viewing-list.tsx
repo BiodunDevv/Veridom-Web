@@ -118,7 +118,7 @@ export function ViewingList({
           }
         />
       ) : (
-        <ul className="grid gap-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
           {items.map((viewing) => (
             <li key={viewing.id}>
               <Link

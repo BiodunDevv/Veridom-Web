@@ -60,12 +60,23 @@ const parseResponseBody = async (response: Response) => {
 export const isApiError = (error: unknown): error is ApiError =>
   error instanceof ApiError
 
+/** Clearer wording for limits people hit while uploading. */
+const FRIENDLY: Record<string, string> = {
+  MEDIA_LIMIT:
+    "You've reached the limit: 30 photos, 5 documents, or 5 photos per viewing.",
+  MEDIA_MINIMUM:
+    "A listing that's been submitted needs at least 3 photos. Add another before removing this one.",
+  FILE_TOO_LARGE: "That file is too large. Photos can be up to 10 MB.",
+  UPLOAD_MISSING: "The upload didn't finish. Please try that file again.",
+  UPLOAD_SIZE_MISMATCH: "The upload didn't match the file. Please try again.",
+}
+
 export const getApiErrorMessage = (
   error: unknown,
   fallback = "Something went wrong."
 ) => {
   if (isApiError(error)) {
-    return error.message
+    return FRIENDLY[error.code] ?? error.message
   }
 
   if (error instanceof Error && error.message) {

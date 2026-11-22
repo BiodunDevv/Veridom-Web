@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/api/client"
+import { normalizeDeal, normalizeInspection } from "@/lib/api/normalize"
 import type { ApiSuccess } from "@/lib/api/types"
 
 export type DealStatus =
@@ -14,16 +15,29 @@ export type DealStatus =
 export type Deal = {
   id: string
   status: DealStatus
-  kind?: "RESERVATION" | "RENEWAL"
+  kind?: "INITIAL" | "RENEWAL"
   listingId?: string
   moveInDate?: string
   holdExpiresAt?: string | null
   payKobo?: number
   totalKobo?: number
   commissionCustomerKobo?: number
+  commissionListerKobo?: number
+  /** What the lister receives: total minus their half of the commission. */
+  listerAmountKobo?: number
   createdAt?: string
   listing?: { id?: string; title?: string } | null
-  payment?: { status?: string } | null
+  /** Flat fields as the API sends them; normalised into `listing`. */
+  listingTitle?: string
+  organizationName?: string
+  tenancyStart?: string
+  tenancyEnd?: string
+  rentPeriod?: "YEAR" | "MONTH"
+  payment?: {
+    status?: string
+    authorizationUrl?: string | null
+    channel?: string | null
+  } | null
   refund?: { id: string; status: string } | null
 }
 
@@ -37,7 +51,14 @@ export type Inspection = {
   listingId?: string
   proposedStartsAt?: string | null
   listing?: { id?: string; title?: string; addressLine?: string } | null
+  listingTitle?: string
+  /** Null until the viewing is confirmed. */
+  addressLine?: string | null
   attendee?: { id?: string; firstName?: string } | null
+  customerFirstName?: string
+  customerEmail?: string | null
+  customerCheckedIn?: boolean
+  attendeeCheckedIn?: boolean
 }
 
 export type EvidencePhoto = { id: string; url?: string; status?: string }
@@ -60,9 +81,13 @@ const post = <T>(
 
 export const dealsApi = {
   list: async () =>
-    unwrap((await apiRequest<ApiSuccess<Listish<Deal>>>("/api/v1/deals")).data),
+    unwrap(
+      (await apiRequest<ApiSuccess<Listish<Deal>>>("/api/v1/deals")).data
+    ).map(normalizeDeal),
   get: async (id: string) =>
-    (await apiRequest<ApiSuccess<Deal>>(`/api/v1/deals/${id}`)).data,
+    normalizeDeal(
+      (await apiRequest<ApiSuccess<Deal>>(`/api/v1/deals/${id}`)).data
+    ),
   reserve: (
     listingId: string,
     body: { moveInDate: string; acknowledgeNoInspection?: boolean },
@@ -97,7 +122,7 @@ export const inspectionsApi = {
     unwrap(
       (await apiRequest<ApiSuccess<Listish<Inspection>>>("/api/v1/inspections"))
         .data
-    ),
+    ).map(normalizeInspection),
   slots: async (listingId: string, from: string, to: string) => {
     const data = (
       await apiRequest<ApiSuccess<Listish<Slot | string>>>(
@@ -115,8 +140,10 @@ export const inspectionsApi = {
   acceptProposal: (id: string) =>
     post<Inspection>(`/api/v1/inspections/${id}/accept-proposal`),
   get: async (id: string) =>
-    (await apiRequest<ApiSuccess<Inspection>>(`/api/v1/inspections/${id}`))
-      .data,
+    normalizeInspection(
+      (await apiRequest<ApiSuccess<Inspection>>(`/api/v1/inspections/${id}`))
+        .data
+    ),
   reschedule: (id: string, startsAt: string) =>
     post<Inspection>(`/api/v1/inspections/${id}/reschedule`, { startsAt }),
   respondReschedule: (id: string, accept: boolean) =>

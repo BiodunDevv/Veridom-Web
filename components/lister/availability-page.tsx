@@ -15,6 +15,7 @@ import {
 import { useMembers } from "@/features/lister/org-hooks"
 import type { Availability } from "@/lib/api/lister"
 import { lagosDate } from "@/lib/format"
+import { FormSkeleton } from "@/components/ui/page-skeletons"
 
 const DAYS = [
   "Sunday",
@@ -249,9 +250,7 @@ export function AvailabilityPage({ id }: { id: string }) {
         description="When customers can book a viewing of this listing."
       />
       {query.isPending ? (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Loading…
-        </p>
+        <FormSkeleton fields={3} />
       ) : query.isError ? (
         <RetryState label="viewing times" onRetry={() => query.refetch()} />
       ) : (

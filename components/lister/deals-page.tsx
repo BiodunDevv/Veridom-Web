@@ -86,7 +86,7 @@ export function ListerDealsPage() {
           hint="When a customer reserves one of your listings, the deal shows up here with its payment status."
         />
       ) : (
-        <ul className="grid gap-3">
+        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
           {items.map((deal) => (
             <li
               key={deal.id}

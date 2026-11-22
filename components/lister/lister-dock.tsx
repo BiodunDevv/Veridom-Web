@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeftRight, UserRound } from "lucide-react"
+import * as React from "react"
+import { ArrowLeftRight, LogOut } from "lucide-react"
 
+import { ListerSwitcherDrawer } from "@/components/lister/lister-switcher"
 import { navFor } from "@/components/lister/lister-nav"
 import { ThemeToggleButton } from "@/components/theme-toggle"
 import {
@@ -10,11 +12,15 @@ import {
   MobileDock,
   type DockItem,
 } from "@/components/site/mobile-dock"
-import { usePermissions } from "@/features/lister/org-hooks"
+import { useRouter } from "next/navigation"
+import { usePermissions, useSwitchOrg } from "@/features/lister/org-hooks"
 
 /** Phone tab bar for the lister area, built from what the role may use. */
 export function ListerDock() {
   const { can } = usePermissions()
+  const router = useRouter()
+  const leave = useSwitchOrg(() => router.push("/account"))
+  const [switching, setSwitching] = React.useState(false)
   const all = navFor(can).flatMap((group) => group.items)
   const primaryPaths = [
     "/lister",
@@ -38,36 +44,43 @@ export function ListerDock() {
   }))
 
   return (
-    <MobileDock
-      items={items}
-      more={
-        <div className="grid grid-cols-3 gap-2">
-          {rest.map((item) => (
-            <Link
-              key={item.path}
-              href={item.path}
-              className="flex flex-col items-center gap-1.5 rounded-2xl bg-foreground/[0.04] px-2 py-3 text-center transition-transform outline-none active:scale-95"
-            >
-              <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary [&_svg]:size-5">
-                {item.icon}
-              </span>
-              <span className="text-[12px] leading-tight font-semibold">
-                {item.title}
-              </span>
-            </Link>
-          ))}
-          <DockTile
-            icon={ArrowLeftRight}
-            label="Switch lister"
-            href="/account#listers"
-          />
-          <DockTile icon={UserRound} label="My profile" href="/account" />
-          <div className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-foreground/[0.04] px-2 py-3">
-            <ThemeToggleButton className="size-10" />
-            <span className="text-[12px] font-semibold">Theme</span>
+    <>
+      <MobileDock
+        items={items}
+        more={
+          <div className="grid grid-cols-3 gap-2">
+            {rest.map((item) => (
+              <Link
+                key={item.path}
+                href={item.path}
+                className="flex flex-col items-center gap-1.5 rounded-2xl bg-foreground/[0.04] px-2 py-3 text-center transition-transform outline-none active:scale-95"
+              >
+                <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary [&_svg]:size-5">
+                  {item.icon}
+                </span>
+                <span className="text-[12px] leading-tight font-semibold">
+                  {item.title}
+                </span>
+              </Link>
+            ))}
+            <DockTile
+              icon={ArrowLeftRight}
+              label="Switch lister"
+              onClick={() => setSwitching(true)}
+            />
+            <DockTile
+              icon={LogOut}
+              label="Leave lister area"
+              onClick={() => leave.mutate(null)}
+            />
+            <div className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-foreground/[0.04] px-2 py-3">
+              <ThemeToggleButton className="size-10" />
+              <span className="text-[12px] font-semibold">Theme</span>
+            </div>
           </div>
-        </div>
-      }
-    />
+        }
+      />
+      <ListerSwitcherDrawer open={switching} onOpenChange={setSwitching} />
+    </>
   )
 }

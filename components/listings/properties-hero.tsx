@@ -10,13 +10,13 @@ const trust = [
 /** Top of the properties page: pattern texture, trust signals, room for the filter bar to overlap. */
 export function PropertiesHero() {
   return (
-    <section className="relative isolate overflow-hidden border-b bg-linear-to-br from-secondary/80 via-background to-background pb-16 lg:pb-24">
+    <section className="relative isolate overflow-hidden border-b bg-linear-to-br from-secondary/80 via-background to-background pb-14 lg:pb-24">
       <TileArt />
-      <div className="relative mx-auto flex max-w-[1280px] flex-col gap-4 px-4 pt-10 sm:px-8 lg:px-12 lg:pt-16">
+      <div className="relative mx-auto flex max-w-[1280px] flex-col gap-4 px-4 pt-6 sm:px-8 sm:pt-10 lg:px-12 lg:pt-16">
         <span className="animate-appear inline-flex items-center gap-1.5 self-start rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <BadgeCheck className="size-3.5" /> Verified listings only
         </span>
-        <h1 className="animate-appear max-w-3xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl lg:text-5xl">
+        <h1 className="animate-appear max-w-3xl text-2xl font-semibold tracking-tight text-balance sm:text-4xl lg:text-5xl">
           Find a home you can trust
         </h1>
         <p
@@ -27,7 +27,7 @@ export function PropertiesHero() {
           listing and its documents before it goes live.
         </p>
         <ul
-          className="animate-appear mt-1 flex flex-wrap gap-2"
+          className="animate-appear mt-1 hidden flex-wrap gap-2 sm:flex"
           style={{ "--appear-delay": "200ms" } as React.CSSProperties}
         >
           {trust.map(({ icon: Icon, text }) => (
