@@ -22,7 +22,6 @@ export default function OpengraphImage() {
     >
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <svg width="76" height="76" viewBox="0 0 92 92">
-          <rect width="92" height="92" rx="22" fill="#0f2e1f" />
           <g transform="translate(46 46) scale(.82) translate(-45.5 -46)">
             <path
               d="M16.79 28.38c.18-3.27 2.98-5.77 6.25-5.59h.04c1.4.04 2.76.54 3.85 1.44 8.05 7.4 12.12 18.19 10.97 29.06 0 .5-.65.48-.81 0-2.18-7.4-9.37-15.9-15.74-18.44-2.84-.83-4.74-3.51-4.56-6.47Z"
