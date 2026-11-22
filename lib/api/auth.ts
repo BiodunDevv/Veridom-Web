@@ -4,7 +4,6 @@ import type {
   ApiSuccess,
   AuthUser,
   SessionItem,
-  UserRole,
 } from "@/lib/api/types"
 
 export type RegisterPayload = {
@@ -13,7 +12,6 @@ export type RegisterPayload = {
   email: string
   phone?: string
   password: string
-  role: Exclude<UserRole, "SUPERADMIN">
 }
 
 export type LoginPayload = {
@@ -31,7 +29,9 @@ export type ResetPasswordPayload = {
 }
 
 export type VerifyEmailPayload = {
-  token: string
+  email: string
+  /** The 6-digit code from the email. */
+  code: string
 }
 
 export type ResendVerificationPayload = {
@@ -45,18 +45,24 @@ export type ChangePasswordPayload = {
 
 export const authApi = {
   register: async (payload: RegisterPayload) => {
-    const response = await apiRequest<ApiSuccess<AuthUser>>("/api/v1/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    })
+    const response = await apiRequest<ApiSuccess<AuthUser>>(
+      "/api/v1/auth/register",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    )
 
     return response.data
   },
   login: async (payload: LoginPayload) => {
-    const response = await apiRequest<ApiSuccess<AuthUser>>("/api/v1/auth/login", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    })
+    const response = await apiRequest<ApiSuccess<AuthUser>>(
+      "/api/v1/auth/login",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    )
 
     return response.data
   },
@@ -106,7 +112,9 @@ export const authApi = {
     })
   },
   listSessions: async () => {
-    const response = await apiRequest<ApiSuccess<SessionItem[]>>("/api/v1/auth/sessions")
+    const response = await apiRequest<ApiSuccess<SessionItem[]>>(
+      "/api/v1/auth/sessions"
+    )
 
     return response.data
   },

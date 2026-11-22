@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 
 type FormSelectProps = Omit<React.ComponentProps<"select">, "children"> & {
   placeholder: string
-  options: readonly string[]
+  options: readonly (string | { value: string; label: string })[]
   /** Optional leading icon (a downloaded SVG asset). */
   icon?: string
   wrapperClassName?: string
@@ -18,6 +18,7 @@ export function FormSelect({
   icon,
   className,
   wrapperClassName,
+  value,
   defaultValue = "",
   ...props
 }: FormSelectProps) {
@@ -30,9 +31,9 @@ export function FormSelect({
         />
       ) : null}
       <select
-        defaultValue={defaultValue}
+        {...(value === undefined ? { defaultValue } : { value })}
         className={cn(
-          "h-12 w-full appearance-none rounded-lg border border-input bg-secondary/60 pr-10 text-sm font-medium outline-none transition-colors invalid:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30",
+          "h-12 w-full appearance-none rounded-lg border border-input bg-secondary/60 pr-10 text-sm font-medium transition-colors outline-none invalid:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30",
           icon ? "pl-11" : "pl-4",
           className
         )}
@@ -41,11 +42,17 @@ export function FormSelect({
         <option value="" disabled>
           {placeholder}
         </option>
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
+        {options.map((option) => {
+          const { value, label } =
+            typeof option === "string"
+              ? { value: option, label: option }
+              : option
+          return (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          )
+        })}
       </select>
       <IconMask
         src="/properties/icon-chevron.svg"

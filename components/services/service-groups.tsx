@@ -4,24 +4,72 @@ import { SectionHeading } from "@/components/landing/section-heading"
 import { ServiceCallout, ServiceCard, type Service } from "./service-card"
 
 const selling: Service[] = [
-  { title: "Valuation Mastery", icon: "/services/valuation.svg", body: "Discover the true worth of your property with our expert valuation services." },
-  { title: "Strategic Marketing", icon: "/services/marketing.svg", body: "Selling a property requires more than just a listing; it demands a strategic marketing approach." },
-  { title: "Negotiation Wizardry", icon: "/services/negotiation.svg", body: "Negotiating the best deal is an art, and our negotiation experts are masters of it." },
-  { title: "Closing Success", icon: "/services/closing.svg", body: "A successful sale is not complete until the closing. We guide you through the intricate closing process." },
+  {
+    title: "Valuation Mastery",
+    icon: "/services/valuation.svg",
+    body: "Discover the true worth of your property with our expert valuation services.",
+  },
+  {
+    title: "Strategic Marketing",
+    icon: "/services/marketing.svg",
+    body: "Selling a property requires more than just a listing; it demands a strategic marketing approach.",
+  },
+  {
+    title: "Negotiation Wizardry",
+    icon: "/services/negotiation.svg",
+    body: "Negotiating the best deal is an art, and our negotiation experts are masters of it.",
+  },
+  {
+    title: "Closing Success",
+    icon: "/services/closing.svg",
+    body: "A successful sale is not complete until the closing. We guide you through the intricate closing process.",
+  },
 ]
 
 const management: Service[] = [
-  { title: "Tenant Harmony", icon: "/services/tenant.svg", body: "Our Tenant Management services ensure that your tenants have a smooth and reducing vacancies." },
-  { title: "Maintenance Ease", icon: "/services/maintenance.svg", body: "Say goodbye to property maintenance headaches. We handle all aspects of property upkeep." },
-  { title: "Financial Peace of Mind", icon: "/services/financial.svg", body: "Managing property finances can be complex. Our financial experts take care of rent collection" },
-  { title: "Legal Guardian", icon: "/services/legal.svg", body: "Stay compliant with property laws and regulations effortlessly." },
+  {
+    title: "Tenant Harmony",
+    icon: "/services/tenant.svg",
+    body: "Our Tenant Management services ensure that your tenants have a smooth and reducing vacancies.",
+  },
+  {
+    title: "Maintenance Ease",
+    icon: "/services/maintenance.svg",
+    body: "Say goodbye to property maintenance headaches. We handle all aspects of property upkeep.",
+  },
+  {
+    title: "Financial Peace of Mind",
+    icon: "/services/financial.svg",
+    body: "Managing property finances can be complex. Our financial experts take care of rent collection",
+  },
+  {
+    title: "Legal Guardian",
+    icon: "/services/legal.svg",
+    body: "Stay compliant with property laws and regulations effortlessly.",
+  },
 ]
 
 const investing: Service[] = [
-  { title: "Market Insight", icon: "/services/market.svg", body: "Stay ahead of market trends with our expert Market Analysis. We provide in-depth insights into real estate market conditions" },
-  { title: "ROI Assessment", icon: "/services/roi.svg", body: "Make investment decisions with confidence. Our ROI Assessment services evaluate the potential returns on your investments" },
-  { title: "Customized Strategies", icon: "/services/custom.svg", body: "Every investor is unique, and so are their goals. We develop Customized Investment Strategies tailored to your specific needs" },
-  { title: "Diversification Mastery", icon: "/services/diversify.svg", body: "Diversify your real estate portfolio effectively. Our experts guide you in spreading your investments across various property types and locations" },
+  {
+    title: "Market Insight",
+    icon: "/services/market.svg",
+    body: "Stay ahead of market trends with our expert Market Analysis. We provide in-depth insights into real estate market conditions",
+  },
+  {
+    title: "ROI Assessment",
+    icon: "/services/roi.svg",
+    body: "Make investment decisions with confidence. Our ROI Assessment services evaluate the potential returns on your investments",
+  },
+  {
+    title: "Customized Strategies",
+    icon: "/services/custom.svg",
+    body: "Every investor is unique, and so are their goals. We develop Customized Investment Strategies tailored to your specific needs",
+  },
+  {
+    title: "Diversification Mastery",
+    icon: "/services/diversify.svg",
+    body: "Diversify your real estate portfolio effectively. Our experts guide you in spreading your investments across various property types and locations",
+  },
 ]
 
 /** Three cards on top, then one card beside a call-out. */
@@ -49,7 +97,11 @@ function FeaturedGroup({
         <ServiceCard service={b} />
         <ServiceCard service={c} className="md:col-span-2 lg:col-span-1" />
         <ServiceCard service={d} />
-        <ServiceCallout title={calloutTitle} body={calloutBody} className="md:col-span-1 lg:col-span-2" />
+        <ServiceCallout
+          title={calloutTitle}
+          body={calloutBody}
+          className="md:col-span-1 lg:col-span-2"
+        />
       </div>
     </Section>
   )
@@ -98,7 +150,11 @@ export function InvestmentServices() {
         </div>
         <div className="grid gap-4 rounded-xl bg-secondary p-2.5 sm:grid-cols-2">
           {investing.map((service) => (
-            <ServiceCard key={service.title} service={service} className="shadow-none" />
+            <ServiceCard
+              key={service.title}
+              service={service}
+              className="shadow-none"
+            />
           ))}
         </div>
       </div>

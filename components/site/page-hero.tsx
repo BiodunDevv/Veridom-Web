@@ -8,7 +8,12 @@ type PageHeroProps = {
 }
 
 /** Title + intro on a soft gradient, used at the top of every inner page. */
-export function PageHero({ title, description, className, children }: PageHeroProps) {
+export function PageHero({
+  title,
+  description,
+  className,
+  children,
+}: PageHeroProps) {
   return (
     <section
       className={cn(

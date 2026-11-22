@@ -18,7 +18,7 @@ export type ApiErrorPayload = {
   }
 }
 
-export type UserRole = "TENANT" | "LANDLORD" | "SUPERADMIN"
+export type UserRole = "CUSTOMER" | "SUPERADMIN"
 
 export type UserStatus =
   | "ACTIVE"

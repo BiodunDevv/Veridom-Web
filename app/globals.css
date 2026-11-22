@@ -95,6 +95,13 @@
 }
 
 @theme inline {
+  --animate-marquee: marquee 36s linear infinite;
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --shadow-md: 0 4px 6px -1px var(--shadow), 0 2px 4px -2px var(--shadow);
@@ -197,6 +204,19 @@
 
   html {
     scroll-behavior: smooth;
+  }
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
   }
 
   @media (prefers-reduced-motion: reduce) {

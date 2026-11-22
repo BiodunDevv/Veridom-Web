@@ -1,5 +1,7 @@
+import { rememberApiMessage } from "@/lib/api/last-message"
 import type { ApiErrorPayload } from "@/lib/api/types"
 
+/** Cross-origin backends go through the /backend rewrite so cookies stay first-party. */
 const getBaseUrl = () => {
   const value = process.env.NEXT_PUBLIC_BACKEND_URL?.trim()
 
@@ -7,23 +9,19 @@ const getBaseUrl = () => {
     return null
   }
 
-  const normalizedValue = value.replace(/\/$/, "")
+  const backendUrl = value.replace(/\/$/, "")
 
   if (typeof window === "undefined") {
-    return normalizedValue
+    return backendUrl
   }
 
   try {
-    const backendOrigin = new URL(normalizedValue).origin
-
-    if (backendOrigin !== window.location.origin) {
-      return "/backend"
-    }
+    return new URL(backendUrl).origin === window.location.origin
+      ? backendUrl
+      : "/backend"
   } catch {
-    return normalizedValue
+    return backendUrl
   }
-
-  return normalizedValue
 }
 
 export class ApiError extends Error {
@@ -31,7 +29,12 @@ export class ApiError extends Error {
   code: string
   details?: unknown
 
-  constructor(message: string, status: number, code: string, details?: unknown) {
+  constructor(
+    message: string,
+    status: number,
+    code: string,
+    details?: unknown
+  ) {
     super(message)
     this.name = "ApiError"
     this.status = status
@@ -59,7 +62,7 @@ export const isApiError = (error: unknown): error is ApiError =>
 
 export const getApiErrorMessage = (
   error: unknown,
-  fallback = "Something went wrong.",
+  fallback = "Something went wrong."
 ) => {
   if (isApiError(error)) {
     return error.message
@@ -74,7 +77,7 @@ export const getApiErrorMessage = (
 
 export const apiRequest = async <T>(
   path: string,
-  init: RequestInit = {},
+  init: RequestInit = {}
 ): Promise<T> => {
   const baseUrl = getBaseUrl()
 
@@ -82,14 +85,29 @@ export const apiRequest = async <T>(
     throw new ApiError(
       "NEXT_PUBLIC_BACKEND_URL is not configured.",
       500,
-      "CONFIG_MISSING",
+      "CONFIG_MISSING"
     )
   }
 
   const headers = new Headers(init.headers)
 
-  if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
+  if (
+    init.body &&
+    !(init.body instanceof FormData) &&
+    !headers.has("Content-Type")
+  ) {
     headers.set("Content-Type", "application/json")
+  }
+
+  // The API rejects state-changing requests without this header (CSRF guard).
+  const method = (init.method ?? "GET").toUpperCase()
+
+  if (
+    method !== "GET" &&
+    method !== "HEAD" &&
+    !headers.has("X-Veridom-Client")
+  ) {
+    headers.set("X-Veridom-Client", "web")
   }
 
   const response = await fetch(`${baseUrl}${path}`, {
@@ -114,15 +132,24 @@ export const apiRequest = async <T>(
         errorPayload.error.message,
         response.status,
         errorPayload.error.code,
-        errorPayload.error.details,
+        errorPayload.error.details
       )
     }
 
     throw new ApiError(
       response.statusText || "Request failed",
       response.status,
-      "REQUEST_FAILED",
+      "REQUEST_FAILED"
     )
+  }
+
+  if (
+    method !== "GET" &&
+    method !== "HEAD" &&
+    payload &&
+    typeof payload === "object"
+  ) {
+    rememberApiMessage((payload as { message?: unknown }).message)
   }
 
   return payload as T

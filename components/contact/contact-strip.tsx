@@ -11,7 +11,9 @@ const tile =
 function Ring({ children }: { children: React.ReactNode }) {
   return (
     <span className="rounded-full border border-primary/50 p-1.5">
-      <span className="block rounded-full border border-primary/50 p-2.5">{children}</span>
+      <span className="block rounded-full border border-primary/50 p-2.5">
+        {children}
+      </span>
     </span>
   )
 }
@@ -39,23 +41,47 @@ export function ContactStrip() {
     >
       <Link href="mailto:info@veridom.com" className={tile}>
         <Ring>
-          <Image src="/contact/icon-mail.svg" alt="" width={26} height={26} unoptimized />
+          <Image
+            src="/contact/icon-mail.svg"
+            alt=""
+            width={26}
+            height={26}
+            unoptimized
+          />
         </Ring>
-        <span className="text-sm font-semibold break-all sm:text-base lg:text-lg">info@veridom.com</span>
+        <span className="text-sm font-semibold break-all sm:text-base lg:text-lg">
+          info@veridom.com
+        </span>
         <Corner />
       </Link>
       <Link href="tel:+11234567890" className={tile}>
         <Ring>
-          <Image src="/contact/icon-phone.svg" alt="" width={26} height={26} unoptimized />
+          <Image
+            src="/contact/icon-phone.svg"
+            alt=""
+            width={26}
+            height={26}
+            unoptimized
+          />
         </Ring>
-        <span className="text-sm font-semibold sm:text-base lg:text-lg">+1 (123) 456-7890</span>
+        <span className="text-sm font-semibold sm:text-base lg:text-lg">
+          +1 (123) 456-7890
+        </span>
         <Corner />
       </Link>
       <Link href="#offices" className={tile}>
         <Ring>
-          <Image src="/contact/icon-pin.svg" alt="" width={26} height={26} unoptimized />
+          <Image
+            src="/contact/icon-pin.svg"
+            alt=""
+            width={26}
+            height={26}
+            unoptimized
+          />
         </Ring>
-        <span className="text-sm font-semibold sm:text-base lg:text-lg">Main Headquarters</span>
+        <span className="text-sm font-semibold sm:text-base lg:text-lg">
+          Main Headquarters
+        </span>
         <Corner />
       </Link>
       <div className={cn(tile, "hover:translate-y-0 hover:shadow-none")}>
@@ -65,7 +91,10 @@ export function ContactStrip() {
         <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-sm font-semibold sm:text-base">
           {links.map((link) => (
             <li key={link.label}>
-              <Link href={link.href} className="underline underline-offset-2 hover:text-primary">
+              <Link
+                href={link.href}
+                className="underline underline-offset-2 hover:text-primary"
+              >
                 {link.label}
               </Link>
             </li>

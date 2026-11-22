@@ -4,23 +4,24 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
-import { AtSign, Lock, Phone, UserRound, UserRoundPlus } from "lucide-react"
+import { AtSign, Lock, Phone, UserRound } from "lucide-react"
 import { toast } from "sonner"
 
 import { authApi } from "@/lib/api/auth"
 import { getApiErrorMessage } from "@/lib/api/client"
+import { takeApiMessage } from "@/lib/api/last-message"
+import type { EmbeddedAuth } from "@/components/auth/auth-modal-types"
 import {
   AuthButton,
+  AuthDivider,
   AuthFooterText,
   AuthHeading,
   AuthInput,
-  AuthNotice,
+  AuthOutlineButton,
+  GoogleIcon,
   authLinkClass,
 } from "@/components/auth/auth-ui"
-import { cn } from "@/lib/utils"
-
 type RegisterValues = {
-  role: "TENANT" | "LANDLORD"
   firstName: string
   lastName: string
   email: string
@@ -30,7 +31,6 @@ type RegisterValues = {
 }
 
 const initialValues: RegisterValues = {
-  role: "TENANT",
   firstName: "",
   lastName: "",
   email: "",
@@ -39,20 +39,29 @@ const initialValues: RegisterValues = {
   confirmPassword: "",
 }
 
-export function RegisterForm() {
+export function RegisterForm({ embedded }: { embedded?: EmbeddedAuth }) {
   const router = useRouter()
   const [values, setValues] = React.useState(initialValues)
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
 
   const registerMutation = useMutation({
     mutationFn: authApi.register,
     onSuccess: () => {
-      toast.success("Account created. Check your email to verify your address.")
-      router.push(`/auth/verify-email?email=${encodeURIComponent(values.email)}`)
+      toast.success("Account created", {
+        description:
+          takeApiMessage("Account created") ??
+          "Enter the 6-digit code we emailed you.",
+      })
+      if (embedded) {
+        embedded.switchTo("verify", values.email.trim())
+        return
+      }
+      router.push(
+        `/auth/verify-email?email=${encodeURIComponent(values.email)}`
+      )
     },
     onError: (error) => {
-      setErrorMessage(
-        getApiErrorMessage(error, "We could not create your account."),
+      toast.error(
+        getApiErrorMessage(error, "We could not create your account.")
       )
     },
   })
@@ -66,25 +75,24 @@ export function RegisterForm() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setErrorMessage(null)
 
     if (!values.firstName.trim() || !values.lastName.trim()) {
-      setErrorMessage("Enter your first and last name.")
+      toast.error("Enter your first and last name.")
       return
     }
 
     if (!values.email.trim()) {
-      setErrorMessage("Email address is required.")
+      toast.error("Email address is required.")
       return
     }
 
     if (values.password.length < 8) {
-      setErrorMessage("Use at least 8 characters for your password.")
+      toast.error("Use at least 8 characters for your password.")
       return
     }
 
     if (values.password !== values.confirmPassword) {
-      setErrorMessage("Passwords do not match.")
+      toast.error("Passwords do not match.")
       return
     }
 
@@ -94,7 +102,6 @@ export function RegisterForm() {
       email: values.email.trim(),
       phone: values.phone.trim() || undefined,
       password: values.password,
-      role: values.role,
     })
   }
 
@@ -104,40 +111,10 @@ export function RegisterForm() {
     <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
       <AuthHeading
         title="Create your account"
-        description="Join Veridom as a tenant or landlord."
+        description="Join Veridom to browse, book viewings and rent with confidence."
       />
 
       <div className="flex flex-col gap-3">
-        {errorMessage ? (
-          <AuthNotice tone="error" icon={UserRoundPlus} title="Registration failed">
-            {errorMessage}
-          </AuthNotice>
-        ) : null}
-
-        <div
-          role="radiogroup"
-          aria-label="Account type"
-          className="grid grid-cols-2 gap-1 rounded-xl border border-input bg-muted/60 p-1"
-        >
-          {(["TENANT", "LANDLORD"] as const).map((role) => (
-            <button
-              key={role}
-              type="button"
-              role="radio"
-              aria-checked={values.role === role}
-              onClick={() => updateValue("role", role)}
-              className={cn(
-                "h-9 rounded-lg text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-foreground/20",
-                values.role === role
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-foreground/55 hover:text-foreground",
-              )}
-            >
-              {role === "TENANT" ? "Tenant" : "Landlord"}
-            </button>
-          ))}
-        </div>
-
         <div className="grid gap-3 sm:grid-cols-2">
           <AuthInput
             id="firstName"
@@ -189,7 +166,9 @@ export function RegisterForm() {
           icon={Lock}
           label="Confirm password"
           value={values.confirmPassword}
-          onChange={(event) => updateValue("confirmPassword", event.target.value)}
+          onChange={(event) =>
+            updateValue("confirmPassword", event.target.value)
+          }
           autoComplete="new-password"
         />
         <AuthButton type="submit" loading={isPending}>
@@ -197,11 +176,31 @@ export function RegisterForm() {
         </AuthButton>
       </div>
 
+      <AuthDivider>Or continue with</AuthDivider>
+
+      <AuthOutlineButton
+        className="w-full flex-none"
+        onClick={() => toast.info("Google sign-in isn't available yet.")}
+      >
+        <GoogleIcon className="size-[18px]" />
+        Continue with Google
+      </AuthOutlineButton>
+
       <AuthFooterText>
         Already have an account?{" "}
-        <Link href="/auth/login" className={authLinkClass}>
-          Sign in
-        </Link>
+        {embedded ? (
+          <button
+            type="button"
+            className={authLinkClass}
+            onClick={() => embedded.switchTo("login")}
+          >
+            Sign in
+          </button>
+        ) : (
+          <Link href="/?auth=login" className={authLinkClass}>
+            Sign in
+          </Link>
+        )}
       </AuthFooterText>
     </form>
   )

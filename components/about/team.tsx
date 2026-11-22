@@ -8,8 +8,16 @@ import { Button } from "@/components/ui/button"
 
 const team = [
   { name: "Max Mitchell", role: "Founder", photo: "/about/team-1.png" },
-  { name: "Sarah Johnson", role: "Chief Real Estate Officer", photo: "/about/team-2.png" },
-  { name: "David Brown", role: "Head of Property Management", photo: "/about/team-3.png" },
+  {
+    name: "Sarah Johnson",
+    role: "Chief Real Estate Officer",
+    photo: "/about/team-2.png",
+  },
+  {
+    name: "David Brown",
+    role: "Head of Property Management",
+    photo: "/about/team-3.png",
+  },
   { name: "Michael Turner", role: "Legal Counsel", photo: "/about/team-4.png" },
 ]
 
@@ -22,7 +30,10 @@ export function Team() {
       />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-7">
         {team.map((member) => (
-          <article key={member.name} className="relative flex flex-col gap-6 rounded-xl bg-card p-4 pb-5 shadow-md lg:p-5">
+          <article
+            key={member.name}
+            className="relative flex flex-col gap-6 rounded-xl bg-card p-4 pb-5 shadow-md lg:p-5"
+          >
             <div className="relative h-60 overflow-hidden rounded-lg lg:h-64">
               <Image
                 src={member.photo}
@@ -43,10 +54,14 @@ export function Team() {
             </Button>
             <div className="mt-2 flex flex-col items-center gap-1 text-center">
               <h3 className="text-xl font-semibold">{member.name}</h3>
-              <p className="text-sm font-medium text-muted-foreground sm:text-base">{member.role}</p>
+              <p className="text-sm font-medium text-muted-foreground sm:text-base">
+                {member.role}
+              </p>
             </div>
             <div className="flex items-center gap-3 rounded-full bg-secondary py-2 pr-2 pl-5">
-              <span className="flex-1 text-sm font-medium sm:text-base">Say Hello 👋</span>
+              <span className="flex-1 text-sm font-medium sm:text-base">
+                Say Hello 👋
+              </span>
               <Button asChild size="icon" className="rounded-full">
                 <Link href="/contact" aria-label={`Contact ${member.name}`}>
                   <IconMask src="/about/icon-send.svg" className="size-5" />

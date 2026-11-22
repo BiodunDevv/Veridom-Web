@@ -44,9 +44,9 @@ export function Gallery() {
             Explore Veridom&apos;s World
           </h2>
           <p className="text-sm leading-relaxed font-medium text-muted-foreground sm:text-base">
-            Step inside the world of Veridom, where professionalism meets warmth, and expertise
-            meets passion. Our gallery offers a glimpse into our team and workspaces, inviting you
-            to get to know us better.
+            Step inside the world of Veridom, where professionalism meets
+            warmth, and expertise meets passion. Our gallery offers a glimpse
+            into our team and workspaces, inviting you to get to know us better.
           </p>
         </div>
         <Photo index={5} className="h-56 sm:h-64" />

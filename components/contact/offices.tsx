@@ -49,7 +49,9 @@ const offices: {
 
 export function Offices() {
   const [tab, setTab] = React.useState<(typeof tabs)[number]["value"]>("all")
-  const visible = offices.filter((office) => tab === "all" || office.region === tab)
+  const visible = offices.filter(
+    (office) => tab === "all" || office.region === tab
+  )
 
   return (
     <Section id="offices">
@@ -58,7 +60,11 @@ export function Offices() {
         description="Veridom is here to serve you across multiple locations. Whether you're looking to meet our team, discuss real estate opportunities, or simply drop by for a chat, we have offices conveniently located to serve your needs. Explore the categories below to find the Veridom office nearest to you"
       />
 
-      <div role="tablist" aria-label="Office type" className="grid w-full grid-cols-3 gap-2 self-start rounded-xl bg-secondary p-2 sm:w-[516px]">
+      <div
+        role="tablist"
+        aria-label="Office type"
+        className="grid w-full grid-cols-3 gap-2 self-start rounded-xl bg-secondary p-2 sm:w-[516px]"
+      >
         {tabs.map((item) => (
           <Button
             key={item.value}
@@ -76,11 +82,18 @@ export function Offices() {
 
       <div className="grid gap-5 md:grid-cols-2 lg:gap-7">
         {visible.map((office) => (
-          <article key={office.kind} className="flex flex-col gap-6 rounded-xl bg-card p-5 shadow-md sm:p-8 lg:p-10">
+          <article
+            key={office.kind}
+            className="flex flex-col gap-6 rounded-xl bg-card p-5 shadow-md sm:p-8 lg:p-10"
+          >
             <div className="flex flex-col gap-3">
               <p className="text-sm font-medium sm:text-base">{office.kind}</p>
-              <h3 className="text-xl font-semibold sm:text-2xl lg:text-3xl">{office.address}</h3>
-              <p className="text-sm leading-relaxed font-medium text-muted-foreground sm:text-base">{office.blurb}</p>
+              <h3 className="text-xl font-semibold sm:text-2xl lg:text-3xl">
+                {office.address}
+              </h3>
+              <p className="text-sm leading-relaxed font-medium text-muted-foreground sm:text-base">
+                {office.blurb}
+              </p>
             </div>
             <ul className="flex flex-wrap gap-2">
               {[
@@ -88,7 +101,10 @@ export function Offices() {
                 { icon: "/contact/chip-phone.svg", label: office.phone },
                 { icon: "/contact/chip-pin.svg", label: office.city },
               ].map((chip) => (
-                <li key={chip.label} className="flex items-center gap-1.5 rounded-full bg-secondary px-3.5 py-2 text-xs font-medium sm:text-sm">
+                <li
+                  key={chip.label}
+                  className="flex items-center gap-1.5 rounded-full bg-secondary px-3.5 py-2 text-xs font-medium sm:text-sm"
+                >
                   <IconMask src={chip.icon} className="size-4 sm:size-5" />
                   {chip.label}
                 </li>

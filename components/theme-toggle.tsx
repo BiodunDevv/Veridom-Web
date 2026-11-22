@@ -16,7 +16,9 @@ export function useThemeToggle() {
 
   return React.useCallback(() => {
     const next = resolvedTheme === "dark" ? "light" : "dark"
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
 
     if (reduceMotion || !document.startViewTransition) {
       setTheme(next)
@@ -37,7 +39,7 @@ export function ThemeToggleButton({ className }: { className?: string }) {
       onClick={toggleTheme}
       aria-label="Toggle theme"
       className={cn(
-        "grid size-10 shrink-0 cursor-pointer place-items-center rounded-full bg-foreground p-2 text-background shadow-md outline-none transition-[scale,box-shadow] duration-200 hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95",
+        "grid size-10 shrink-0 cursor-pointer place-items-center rounded-full bg-foreground p-2 text-background shadow-md transition-[scale,box-shadow] duration-200 outline-none hover:shadow-xl focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95",
         className
       )}
     >
@@ -60,12 +62,12 @@ export function ThemeToggleButton({ className }: { className?: string }) {
           <circle
             cx="16"
             cy="16"
-            className="[r:8px] transition-[r] duration-[350ms] ease-in-out dark:[r:10px]"
+            className="transition-[r] duration-[350ms] ease-in-out [r:8px] dark:[r:10px]"
           />
           <g
             stroke="currentColor"
             strokeWidth="1.5"
-            className="origin-center rotate-0 scale-100 opacity-100 transition-[rotate,scale,opacity] duration-[350ms] ease-in-out [transform-box:fill-box] dark:-rotate-[100deg] dark:scale-50 dark:opacity-0"
+            className="origin-center scale-100 rotate-0 opacity-100 transition-[rotate,scale,opacity] duration-[350ms] ease-in-out [transform-box:fill-box] dark:scale-50 dark:-rotate-[100deg] dark:opacity-0"
           >
             <path d="M16 5.5v-4" />
             <path d="M16 30.5v-4" />

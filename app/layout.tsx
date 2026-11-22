@@ -1,3 +1,4 @@
+import type { Metadata, Viewport } from "next"
 import { Geist_Mono, Urbanist } from "next/font/google"
 
 import "./globals.css"
@@ -11,6 +12,27 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
 })
+
+export const metadata: Metadata = {
+  title: { default: "Veridom | Verified homes, trusted deals", template: "%s" },
+  description:
+    "Browse verified properties across Nigeria, book viewings and close deals securely with Veridom.",
+  applicationName: "Veridom",
+  openGraph: {
+    siteName: "Veridom",
+    title: "Veridom | Verified homes, trusted deals",
+    description:
+      "Browse verified properties across Nigeria, book viewings and close deals securely.",
+    type: "website",
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#171717" },
+  ],
+}
 
 export default function RootLayout({
   children,

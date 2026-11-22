@@ -1,5 +1,7 @@
+"use client"
+
 import * as React from "react"
-import { Loader2, type LucideIcon } from "lucide-react"
+import { Eye, EyeOff, Loader2, type LucideIcon } from "lucide-react"
 
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -31,8 +33,12 @@ export function AuthInput({
   label,
   id,
   className,
+  type,
   ...props
 }: AuthInputProps) {
+  const [visible, setVisible] = React.useState(false)
+  const isPassword = type === "password"
+
   return (
     <div className="relative">
       <label htmlFor={id} className="sr-only">
@@ -44,15 +50,32 @@ export function AuthInput({
       />
       <input
         id={id}
+        type={isPassword && visible ? "text" : type}
         placeholder={label}
         className={cn(
-          "h-11 w-full rounded-xl border border-input bg-background pr-3.5 shadow-xs dark:bg-foreground/[0.04] pl-10 text-[15px] text-foreground outline-none transition-colors",
+          "h-11 w-full rounded-xl border border-input bg-background pr-3.5 pl-10 text-[15px] text-foreground shadow-xs transition-colors outline-none dark:bg-foreground/[0.04]",
           "placeholder:text-foreground/40 hover:border-foreground/25 focus-visible:border-primary/70 focus-visible:ring-3 focus-visible:ring-primary/20",
           "disabled:cursor-not-allowed disabled:opacity-60",
-          className,
+          isPassword && "pr-11",
+          className
         )}
         {...props}
       />
+      {isPassword ? (
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "Hide password" : "Show password"}
+          aria-pressed={visible}
+          className="absolute top-1/2 right-2 grid size-8 -translate-y-1/2 place-items-center rounded-lg text-foreground/45 transition-colors outline-none hover:bg-foreground/5 hover:text-foreground focus-visible:ring-3 focus-visible:ring-primary/30"
+        >
+          {visible ? (
+            <EyeOff className="size-[18px]" />
+          ) : (
+            <Eye className="size-[18px]" />
+          )}
+        </button>
+      ) : null}
     </div>
   )
 }
@@ -74,7 +97,7 @@ export function AuthButton({
       className={cn(
         buttonVariants({ variant: "default", size: "lg" }),
         "h-11 w-full rounded-xl text-[15px]",
-        className,
+        className
       )}
       {...props}
     >
@@ -94,7 +117,7 @@ export function AuthOutlineButton({
       className={cn(
         buttonVariants({ variant: "outline", size: "lg" }),
         "h-11 flex-1 rounded-xl text-[15px]",
-        className,
+        className
       )}
       {...props}
     />
@@ -129,13 +152,17 @@ export function AuthNotice({
         "flex gap-2.5 rounded-xl border px-3.5 py-3 text-left text-sm",
         tone === "error"
           ? "border-destructive/30 bg-destructive/10 text-destructive"
-          : "border-border bg-muted/60 text-foreground/80",
+          : "border-border bg-muted/60 text-foreground/80"
       )}
     >
       {Icon ? <Icon aria-hidden className="mt-0.5 size-4 shrink-0" /> : null}
       <div className="grid gap-0.5">
         <p className="font-medium text-foreground">{title}</p>
-        <p className={tone === "error" ? "text-destructive/80" : "text-foreground/60"}>
+        <p
+          className={
+            tone === "error" ? "text-destructive/80" : "text-foreground/60"
+          }
+        >
           {children}
         </p>
       </div>

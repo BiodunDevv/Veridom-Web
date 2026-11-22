@@ -16,7 +16,12 @@ import { cn } from "@/lib/utils"
 const locations = ["Lagos", "Abuja", "Port Harcourt", "Ibadan"] as const
 const types = ["Villa", "Apartment", "Townhouse", "Cottage"] as const
 const counts = ["1", "2", "3", "4", "5+"] as const
-const budgets = ["Under $300k", "$300k – $700k", "$700k – $1.5M", "$1.5M+"] as const
+const budgets = [
+  "Under $300k",
+  "$300k – $700k",
+  "$700k – $1.5M",
+  "$1.5M+",
+] as const
 
 export function InquiryForm() {
   const [agreed, setAgreed] = React.useState(false)
@@ -41,40 +46,102 @@ export function InquiryForm() {
       >
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           <Field label="First Name" htmlFor="first-name">
-            <input id="first-name" name="firstName" required placeholder="Enter First Name" className={inputClass} />
+            <input
+              id="first-name"
+              name="firstName"
+              required
+              placeholder="Enter First Name"
+              className={inputClass}
+            />
           </Field>
           <Field label="Last Name" htmlFor="last-name">
-            <input id="last-name" name="lastName" required placeholder="Enter Last Name" className={inputClass} />
+            <input
+              id="last-name"
+              name="lastName"
+              required
+              placeholder="Enter Last Name"
+              className={inputClass}
+            />
           </Field>
           <Field label="Email" htmlFor="email">
-            <input id="email" name="email" type="email" required placeholder="Enter your Email" className={inputClass} />
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              placeholder="Enter your Email"
+              className={inputClass}
+            />
           </Field>
           <Field label="Phone" htmlFor="phone">
-            <input id="phone" name="phone" type="tel" placeholder="Enter Phone Number" className={inputClass} />
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              placeholder="Enter Phone Number"
+              className={inputClass}
+            />
           </Field>
 
           <Field label="Preferred Location" htmlFor="location">
-            <FormSelect id="location" name="location" placeholder="Select Location" options={locations} />
+            <FormSelect
+              id="location"
+              name="location"
+              placeholder="Select Location"
+              options={locations}
+            />
           </Field>
           <Field label="Property Type" htmlFor="type">
-            <FormSelect id="type" name="type" placeholder="Select Property Type" options={types} />
+            <FormSelect
+              id="type"
+              name="type"
+              placeholder="Select Property Type"
+              options={types}
+            />
           </Field>
           <Field label="No. of Bathrooms" htmlFor="baths">
-            <FormSelect id="baths" name="baths" placeholder="Select no. of Bathrooms" options={counts} />
+            <FormSelect
+              id="baths"
+              name="baths"
+              placeholder="Select no. of Bathrooms"
+              options={counts}
+            />
           </Field>
           <Field label="No. of Bedrooms" htmlFor="beds">
-            <FormSelect id="beds" name="beds" placeholder="Select no. of Bedrooms" options={counts} />
+            <FormSelect
+              id="beds"
+              name="beds"
+              placeholder="Select no. of Bedrooms"
+              options={counts}
+            />
           </Field>
 
           <Field label="Budget" htmlFor="budget" className="sm:col-span-2">
-            <FormSelect id="budget" name="budget" placeholder="Select Budget" options={budgets} />
+            <FormSelect
+              id="budget"
+              name="budget"
+              placeholder="Select Budget"
+              options={budgets}
+            />
           </Field>
           <Field label="Preferred Contact Method" className="sm:col-span-2">
-            <div role="radiogroup" aria-label="Preferred contact method" className="grid gap-3 sm:grid-cols-2">
+            <div
+              role="radiogroup"
+              aria-label="Preferred contact method"
+              className="grid gap-3 sm:grid-cols-2"
+            >
               {(
                 [
-                  { value: "phone", icon: "/properties/icon-phone.svg", label: "Enter Your Number" },
-                  { value: "email", icon: "/properties/icon-mail.svg", label: "Enter Your Email" },
+                  {
+                    value: "phone",
+                    icon: "/properties/icon-phone.svg",
+                    label: "Enter Your Number",
+                  },
+                  {
+                    value: "email",
+                    icon: "/properties/icon-mail.svg",
+                    label: "Enter Your Email",
+                  },
                 ] as const
               ).map((option) => (
                 <label
@@ -84,8 +151,13 @@ export function InquiryForm() {
                     contact === option.value ? "border-primary" : "border-input"
                   )}
                 >
-                  <IconMask src={option.icon} className="size-5 text-muted-foreground" />
-                  <span className="flex-1 text-muted-foreground">{option.label}</span>
+                  <IconMask
+                    src={option.icon}
+                    className="size-5 text-muted-foreground"
+                  />
+                  <span className="flex-1 text-muted-foreground">
+                    {option.label}
+                  </span>
                   <input
                     type="radio"
                     name="contactMethod"
@@ -99,7 +171,11 @@ export function InquiryForm() {
             </div>
           </Field>
 
-          <Field label="Message" htmlFor="message" className="sm:col-span-2 lg:col-span-4">
+          <Field
+            label="Message"
+            htmlFor="message"
+            className="sm:col-span-2 lg:col-span-4"
+          >
             <textarea
               id="message"
               name="message"
@@ -128,7 +204,12 @@ export function InquiryForm() {
               </Link>
             </span>
           </label>
-          <Button type="submit" size="xl" disabled={!agreed} className="w-full sm:w-auto">
+          <Button
+            type="submit"
+            size="xl"
+            disabled={!agreed}
+            className="w-full sm:w-auto"
+          >
             Send Your Message
           </Button>
         </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
@@ -22,7 +23,6 @@ export function ResetPasswordForm() {
   const token = searchParams.get("token") ?? ""
   const [password, setPassword] = React.useState("")
   const [confirmPassword, setConfirmPassword] = React.useState("")
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [submitted, setSubmitted] = React.useState(false)
 
   const resetPasswordMutation = useMutation({
@@ -31,28 +31,27 @@ export function ResetPasswordForm() {
       setSubmitted(true)
     },
     onError: (error) => {
-      setErrorMessage(
-        getApiErrorMessage(error, "We could not reset your password."),
+      toast.error(
+        getApiErrorMessage(error, "We could not reset your password.")
       )
     },
   })
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setErrorMessage(null)
 
     if (!token) {
-      setErrorMessage("Reset token is missing from this link.")
+      toast.error("Reset token is missing from this link.")
       return
     }
 
     if (password.length < 8) {
-      setErrorMessage("Use at least 8 characters for your new password.")
+      toast.error("Use at least 8 characters for your new password.")
       return
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage("Passwords do not match.")
+      toast.error("Passwords do not match.")
       return
     }
 
@@ -71,18 +70,17 @@ export function ResetPasswordForm() {
 
       <div className="flex flex-col gap-3">
         {!token ? (
-          <AuthNotice tone="error" icon={ShieldAlert} title="Reset link is incomplete">
+          <AuthNotice
+            tone="error"
+            icon={ShieldAlert}
+            title="Reset link is incomplete"
+          >
             Open the full link from your email or request a new reset link.
           </AuthNotice>
         ) : null}
         {submitted ? (
           <AuthNotice icon={CheckCircle2} title="Password updated">
             Your password has been reset. You can sign in with the new one now.
-          </AuthNotice>
-        ) : null}
-        {errorMessage ? (
-          <AuthNotice tone="error" title="Reset failed">
-            {errorMessage}
           </AuthNotice>
         ) : null}
         <AuthInput

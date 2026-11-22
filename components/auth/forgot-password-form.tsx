@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 import Link from "next/link"
 import { useMutation } from "@tanstack/react-query"
 import { AtSign, MailCheck } from "lucide-react"
@@ -18,25 +19,23 @@ import {
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = React.useState("")
-  const [errorMessage, setErrorMessage] = React.useState<string | null>(null)
   const [submitted, setSubmitted] = React.useState(false)
 
   const forgotPasswordMutation = useMutation({
     mutationFn: authApi.forgotPassword,
     onSuccess: () => setSubmitted(true),
     onError: (error) => {
-      setErrorMessage(
-        getApiErrorMessage(error, "We could not submit your request."),
+      toast.error(
+        getApiErrorMessage(error, "We could not submit your request.")
       )
     },
   })
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setErrorMessage(null)
 
     if (!email.trim()) {
-      setErrorMessage("Email address is required.")
+      toast.error("Email address is required.")
       return
     }
 
@@ -57,11 +56,6 @@ export function ForgotPasswordForm() {
             link shortly.
           </AuthNotice>
         ) : null}
-        {errorMessage ? (
-          <AuthNotice tone="error" title="Request failed">
-            {errorMessage}
-          </AuthNotice>
-        ) : null}
         <AuthInput
           id="email"
           type="email"
@@ -78,7 +72,7 @@ export function ForgotPasswordForm() {
 
       <AuthFooterText>
         Remembered your password?{" "}
-        <Link href="/auth/login" className={authLinkClass}>
+        <Link href="/?auth=login" className={authLinkClass}>
           Back to login
         </Link>
       </AuthFooterText>

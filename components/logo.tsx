@@ -6,12 +6,7 @@ type LogoProps = React.SVGProps<SVGSVGElement> & {
   title?: string
 }
 
-function Logo({
-  className,
-  title = "Veridom",
-  style,
-  ...props
-}: LogoProps) {
+function Logo({ className, title = "Veridom", style, ...props }: LogoProps) {
   return (
     <svg
       viewBox="0 0 92 92"
@@ -47,4 +42,9 @@ function Logo({
   )
 }
 
-export { Logo }
+/** The mark alone, sized for sidebars and compact UI. */
+function LogoIcon({ className, ...props }: LogoProps) {
+  return <Logo className={cn("size-6", className)} {...props} />
+}
+
+export { Logo, LogoIcon }

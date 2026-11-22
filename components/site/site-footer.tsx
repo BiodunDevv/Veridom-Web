@@ -10,8 +10,20 @@ import { cn } from "@/lib/utils"
 import { IconMask } from "@/components/landing/icon-mask"
 
 const columns = [
-  { title: "Home", links: ["Hero Section", "Features", "Properties", "Testimonials", "FAQ’s"] },
-  { title: "About Us", links: ["Our Story", "Our Works", "How It Works", "Our Team", "Our Clients"] },
+  {
+    title: "Home",
+    links: ["Hero Section", "Features", "Properties", "Why Veridom", "FAQ’s"],
+  },
+  {
+    title: "About Us",
+    links: [
+      "Our Story",
+      "Our Works",
+      "How It Works",
+      "Our Team",
+      "Our Clients",
+    ],
+  },
   { title: "Properties", links: ["Portfolio", "Categories"] },
   {
     title: "Services",
@@ -74,7 +86,9 @@ export function SiteFooter() {
         >
           {columns.map((column) => (
             <div key={column.title} className="flex flex-col gap-4">
-              <h3 className="font-medium text-muted-foreground">{column.title}</h3>
+              <h3 className="font-medium text-muted-foreground">
+                {column.title}
+              </h3>
               <ul className="flex flex-col gap-2.5 text-sm font-medium">
                 {column.links.map((link) => (
                   <li key={link}>

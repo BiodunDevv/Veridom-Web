@@ -4,20 +4,20 @@ import { SiteHeader } from "@/components/site/site-header"
 import { Faq } from "./faq"
 import { Hero } from "./hero"
 import { Properties } from "./properties"
-import { Testimonials } from "./testimonials"
+import { About } from "./about"
 
 export function LandingPage() {
   return (
     <div className="relative overflow-x-clip bg-background">
-      {/* First screen: header and hero fit exactly one viewport on desktop. */}
-      <div className="flex min-h-svh flex-col lg:h-svh lg:overflow-hidden">
-        <SiteHeader />
+      <SiteHeader />
+      {/* First screen: hero fills the viewport below the sticky header. */}
+      <div className="flex min-h-[calc(100svh-5.75rem)] flex-col lg:h-[calc(100svh-6.25rem)] lg:overflow-hidden">
         <main className="flex min-h-0 flex-1 flex-col">
           <Hero />
         </main>
       </div>
       <Properties />
-      <Testimonials />
+      <About />
       <Faq />
       <Cta />
       <SiteFooter />

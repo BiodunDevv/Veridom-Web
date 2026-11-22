@@ -10,10 +10,21 @@ export function SectionPager({ total }: { total: number }) {
         <span className="text-foreground">01</span> of {total}
       </p>
       <div className="flex gap-2.5">
-        <Button variant="outline" size="icon-sm" className="rounded-full" disabled aria-label="Previous">
+        <Button
+          variant="outline"
+          size="icon-sm"
+          className="rounded-full"
+          disabled
+          aria-label="Previous"
+        >
           <IconMask src="/landing/icon-prev.svg" className="size-4" />
         </Button>
-        <Button variant="secondary" size="icon-sm" className="rounded-full" aria-label="Next">
+        <Button
+          variant="secondary"
+          size="icon-sm"
+          className="rounded-full"
+          aria-label="Next"
+        >
           <IconMask src="/landing/icon-next.svg" className="size-4" />
         </Button>
       </div>

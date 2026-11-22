@@ -21,7 +21,10 @@ export function HeroBadge({ className }: { className?: string }) {
         className="animate-spin-slow absolute inset-0 size-full fill-foreground"
       >
         <defs>
-          <path id="badge-circle" d="M87.5 87.5m-62 0a62 62 0 1 1 124 0a62 62 0 1 1-124 0" />
+          <path
+            id="badge-circle"
+            d="M87.5 87.5m-62 0a62 62 0 1 1 124 0a62 62 0 1 1-124 0"
+          />
         </defs>
         <text fontSize="15" fontWeight="600" letterSpacing="2.4">
           <textPath href="#badge-circle" textLength="386">

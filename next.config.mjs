@@ -1,18 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      { source: "/auth/login", destination: "/?auth=login", permanent: false },
+      {
+        source: "/auth/register",
+        destination: "/?auth=register",
+        permanent: false,
+      },
+    ]
+  },
   async rewrites() {
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "")
 
-    if (!backendUrl) {
-      return []
-    }
-
-    return [
-      {
-        source: "/backend/:path*",
-        destination: `${backendUrl}/:path*`,
-      },
-    ]
+    return backendUrl
+      ? [{ source: "/backend/:path*", destination: `${backendUrl}/:path*` }]
+      : []
   },
   images: {
     remotePatterns: [
