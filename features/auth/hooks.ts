@@ -24,7 +24,9 @@ function useSignOutFlow(message?: string) {
 
   return async () => {
     dispatch(clearAuthState())
-    await queryClient.invalidateQueries({ queryKey: queryKeys.me })
+    // Drop everything cached for this person (their lister, permissions, chats,
+    // deals...) so the next sign-in never sees it.
+    queryClient.clear()
     if (message) toast.success(message)
     router.push("/?auth=login")
   }

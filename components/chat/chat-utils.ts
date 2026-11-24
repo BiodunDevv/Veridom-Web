@@ -1,14 +1,10 @@
 import type { ChatMessage, ChatSide } from "@/lib/api/inquiries"
+import { formatTime } from "@/lib/format"
 
 export const basePathFor = (side: ChatSide) =>
   side === "lister" ? "/lister/inquiries" : "/account/messages"
 
-export const timeLabel = (value: string) =>
-  new Date(value).toLocaleTimeString("en-NG", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "Africa/Lagos",
-  })
+export const timeLabel = (value: string) => formatTime(value)
 
 const dayKey = (value: string) =>
   new Date(value).toLocaleDateString("en-CA", { timeZone: "Africa/Lagos" })

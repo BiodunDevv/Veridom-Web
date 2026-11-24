@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Building2, Loader2, MessageSquareText } from "lucide-react"
+import { Building2, Loader2, MessageSquareText, UserCheck } from "lucide-react"
 
 import { basePathFor, inboxTime } from "@/components/chat/chat-utils"
 import { initialsOf } from "@/components/lister/lister-ui"
@@ -21,10 +21,12 @@ function Row({
   item,
   side,
   active,
+  index,
 }: {
   item: InboxItem
   side: ChatSide
   active: boolean
+  index: number
 }) {
   const unread = unreadCount(item)
   const name =
@@ -41,16 +43,28 @@ function Row({
         }${item.lastMessagePreview ?? "No messages yet"}`
 
   return (
-    <li>
+    <li
+      className="animate-in fade-in slide-in-from-bottom-1"
+      style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+    >
       <Link
         href={`${basePathFor(side)}/${item.id}`}
         aria-current={active ? "page" : undefined}
         className={cn(
-          "flex items-center gap-3 rounded-xl px-3 py-3 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-          active ? "bg-primary/10" : "hover:bg-accent"
+          "relative flex items-center gap-3 rounded-xl px-3 py-3 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-[0.99]",
+          active
+            ? "bg-primary/10"
+            : unread
+              ? "bg-primary/[0.04] hover:bg-accent"
+              : "hover:bg-accent"
         )}
       >
-        <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15">
+        <span
+          className={cn(
+            "relative grid size-12 shrink-0 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary ring-1 ring-primary/15",
+            unread > 0 && "ring-2 ring-primary"
+          )}
+        >
           {side === "lister" ? (
             initialsOf(name)
           ) : (
@@ -71,9 +85,22 @@ function Row({
               {inboxTime(item.lastMessageAt)}
             </span>
           </span>
-          {side === "lister" && item.listingTitle ? (
-            <span className="block truncate text-[11px] text-muted-foreground">
-              {item.listingTitle}
+          {side === "lister" &&
+          (item.listingTitle || item.assignedFirstName) ? (
+            <span className="mt-0.5 flex items-center justify-between gap-2">
+              <span className="flex min-w-0 items-center gap-1 text-[11px] text-muted-foreground">
+                <Building2 className="size-3 shrink-0" aria-hidden />
+                <span className="truncate">{item.listingTitle}</span>
+              </span>
+              {item.assignedFirstName ? (
+                <span
+                  title={`Assigned to ${item.assignedFirstName}`}
+                  className="inline-flex max-w-[45%] shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                >
+                  <UserCheck className="size-3 shrink-0" aria-hidden />
+                  <span className="truncate">{item.assignedFirstName}</span>
+                </span>
+              ) : null}
             </span>
           ) : null}
           <span className="flex items-center justify-between gap-2">
@@ -91,11 +118,6 @@ function Row({
               </span>
             ) : null}
           </span>
-          {side === "lister" && item.assignedFirstName ? (
-            <span className="mt-0.5 block text-[11px] text-muted-foreground">
-              Assigned to {item.assignedFirstName}
-            </span>
-          ) : null}
         </span>
       </Link>
     </li>
@@ -189,6 +211,7 @@ export function InboxList({ side }: { side: ChatSide }) {
               {items.map((item) => (
                 <Row
                   key={item.id}
+                  index={items.indexOf(item)}
                   item={item}
                   side={side}
                   active={pathname === `${basePathFor(side)}/${item.id}`}

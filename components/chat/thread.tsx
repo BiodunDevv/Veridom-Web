@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Ban,
   Building2,
+  Check,
   Loader2,
   Lock,
   MoreVertical,
@@ -25,6 +26,7 @@ import {
   sameDay,
 } from "@/components/chat/chat-utils"
 import { Composer } from "@/components/chat/composer"
+import { ListingPreview } from "@/components/chat/listing-preview"
 import { MessageBubble } from "@/components/chat/message-bubble"
 import { SystemCardView } from "@/components/chat/system-card"
 import { useConfirm } from "@/components/lister/confirm-dialog"
@@ -49,6 +51,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
+import { useMe } from "@/features/auth/hooks"
 import { useChatThread } from "@/features/chat/hooks"
 import { useMembers, usePermissions } from "@/features/lister/org-hooks"
 import { getApiErrorMessage } from "@/lib/api/client"
@@ -117,6 +120,7 @@ export function ChatThread({ side, id }: { side: ChatSide; id: string }) {
   const queryClient = useQueryClient()
   const { can } = usePermissions()
   const chat = useChatThread(side, id)
+  const myId = useMe().data?._id
   const confirm = useConfirm()
   const scroller = React.useRef<HTMLDivElement>(null)
   const stick = React.useRef(true)
@@ -189,7 +193,7 @@ export function ChatThread({ side, id }: { side: ChatSide; id: string }) {
   })
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col bg-background lg:static lg:z-auto lg:h-(--chat-h) lg:min-h-[26rem] lg:overflow-hidden lg:rounded-2xl lg:border lg:bg-card lg:shadow-md">
+    <div className="fixed inset-x-0 top-0 z-[60] flex h-dvh flex-col bg-background lg:static lg:z-auto lg:h-(--chat-h) lg:min-h-[26rem] lg:overflow-hidden lg:rounded-2xl lg:border lg:bg-card lg:shadow-md">
       <header className="flex items-center gap-2 border-b bg-background/95 px-2 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur sm:px-4 lg:pt-2.5">
         <Button
           asChild
@@ -251,21 +255,46 @@ export function ChatThread({ side, id }: { side: ChatSide; id: string }) {
             {side === "lister" && members?.length ? (
               <>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Assign to</DropdownMenuLabel>
-                {members
+                <DropdownMenuLabel className="flex items-center gap-1.5 text-xs">
+                  <UserCheck className="size-3.5" aria-hidden /> Assign to
+                </DropdownMenuLabel>
+                {[...members]
                   .filter((mem) => mem.status === "ACTIVE")
-                  .map((mem) => (
-                    <DropdownMenuItem
-                      key={mem.id}
-                      onSelect={() =>
-                        void act(`Assigned to ${mem.firstName}`, () =>
-                          inquiriesApi.assign(id, mem.userId)
-                        ).catch(() => undefined)
-                      }
-                    >
-                      <UserCheck /> {mem.firstName} {mem.lastName}
-                    </DropdownMenuItem>
-                  ))}
+                  .sort(
+                    (a, b) =>
+                      Number(b.userId === myId) - Number(a.userId === myId)
+                  )
+                  .map((mem) => {
+                    const current = info?.assignedTo === mem.userId
+                    return (
+                      <DropdownMenuItem
+                        key={mem.id}
+                        disabled={current}
+                        onSelect={() =>
+                          void act(`Assigned to ${mem.firstName}`, () =>
+                            inquiriesApi.assign(id, mem.userId)
+                          ).catch(() => undefined)
+                        }
+                        className="gap-2.5"
+                      >
+                        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+                          {initialsOf(`${mem.firstName} ${mem.lastName}`)}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">
+                          {mem.firstName} {mem.lastName}
+                          {mem.userId === myId ? (
+                            <span className="text-muted-foreground">
+                              {" "}
+                              (you)
+                            </span>
+                          ) : null}
+                        </span>
+                        {current ? (
+                          <Check className="size-4 text-primary" />
+                        ) : null}
+                      </DropdownMenuItem>
+                    )
+                  })}
               </>
             ) : null}
             <DropdownMenuSeparator />
@@ -308,6 +337,8 @@ export function ChatThread({ side, id }: { side: ChatSide; id: string }) {
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
+
+      <ListingPreview listingId={info?.listingId} title={info?.listingTitle} />
 
       <div className="relative min-h-0 flex-1">
         <div

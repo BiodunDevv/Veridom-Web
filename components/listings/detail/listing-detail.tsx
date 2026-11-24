@@ -12,6 +12,7 @@ import {
   ShowerHead,
 } from "lucide-react"
 
+import { PriceTag } from "@/components/listings/detail/price-tag"
 import { PhotoGallery } from "@/components/listings/detail/photo-gallery"
 import { ReserveCard } from "@/components/listings/detail/reserve-card"
 import { placeLabel, priceSuffix } from "@/components/listings/listing-card"
@@ -139,7 +140,7 @@ export function ListingDetail({ id }: { id: string }) {
         <ArrowLeft className="size-4" /> Back to results
       </Link>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">
@@ -159,31 +160,26 @@ export function ListingDetail({ id }: { id: string }) {
           <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
             {listing.title}
           </h1>
-          <p className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground">
-            <MapPin className="size-4" />
-            {[listing.addressLine, placeLabel(listing.location)]
-              .filter(Boolean)
-              .join(", ")}
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1.5 text-sm font-medium text-muted-foreground">
+            <span className="inline-flex items-start gap-1.5">
+              <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden />
+              {[listing.addressLine, placeLabel(listing.location)]
+                .filter(Boolean)
+                .join(", ")}
+            </span>
             {mapHref ? (
               <a
                 href={mapHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="ml-2 text-primary underline underline-offset-2"
+                className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/15"
               >
                 View on map
               </a>
             ) : null}
           </p>
         </div>
-        <div className="flex flex-col leading-tight sm:text-right">
-          <span className="text-2xl font-semibold sm:text-3xl">
-            {formatNaira(listing.priceKobo)}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {priceSuffix(listing) || "asking price"}
-          </span>
-        </div>
+        <PriceTag listing={listing} />
       </div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">

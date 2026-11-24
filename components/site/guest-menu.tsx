@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 
+import { ListerShortcutCards } from "@/components/account/lister-shortcut"
 import { useAuthModal } from "@/components/auth/auth-modal"
 import { Logo } from "@/components/logo"
 import { Button } from "@/components/ui/button"
@@ -96,6 +97,7 @@ export function GuestMenu({ signedIn = false }: { signedIn?: boolean }) {
         <div className="flex flex-col gap-3 border-t p-4 sm:p-8">
           {signedIn ? (
             <>
+              <ListerShortcutCards />
               <SheetClose asChild>
                 <Button asChild size="lg">
                   <Link href="/account">My profile</Link>

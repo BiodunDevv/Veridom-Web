@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutGrid, X, type LucideIcon } from "lucide-react"
+import { Ellipsis, X, type LucideIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -16,6 +16,8 @@ export type DockItem = {
   onClick?: () => void
   /** Extra paths that also light this tab. */
   match?: (pathname: string) => boolean
+  /** A count shown as a small dot on the icon (hidden at 0). */
+  badge?: number
 }
 
 const isActive = (item: DockItem, pathname: string) =>
@@ -78,10 +80,13 @@ export function MobileDock({
   items,
   more,
   moreLabel = "More",
+  moreActive,
 }: {
   items: DockItem[]
   more?: React.ReactNode
   moreLabel?: string
+  /** Pages that live behind "More", so the tab lights up when you are on one. */
+  moreActive?: (pathname: string) => boolean
 }) {
   const pathname = usePathname()
   // Opening is remembered per page, so moving to another page closes the panel.
@@ -97,9 +102,11 @@ export function MobileDock({
   }, [open])
 
   const count = items.length + (more ? 1 : 0)
-  const activeIndex = open
-    ? items.length
-    : items.findIndex((item) => isActive(item, pathname))
+  const moreOn = Boolean(more && moreActive?.(pathname))
+  const activeIndex =
+    open || moreOn
+      ? items.length
+      : items.findIndex((item) => isActive(item, pathname))
   const labelAt = (i: number) =>
     i === items.length ? (open ? "Close" : moreLabel) : items[i]?.label
 
@@ -182,7 +189,7 @@ export function MobileDock({
               >
                 <span
                   className={cn(
-                    "mx-auto mt-1.5 block h-8 w-14 rounded-full shadow-md ring-1 ring-white/30 transition-colors duration-300",
+                    "mx-auto mt-1.5 block h-8 w-12 rounded-full shadow-md ring-1 ring-white/30 transition-colors duration-300",
                     open ? "bg-foreground" : "bg-primary"
                   )}
                   style={{
@@ -199,16 +206,26 @@ export function MobileDock({
                     <>
                       <span
                         className={cn(
-                          "grid h-8 w-14 place-items-center rounded-full transition-[color,transform] duration-300 [&_svg]:size-[19px]",
+                          "grid h-8 w-12 place-items-center rounded-full transition-[color,transform] duration-300 [&_svg]:size-[19px]",
                           active
                             ? "-translate-y-px scale-110 text-primary-foreground"
                             : "text-muted-foreground"
                         )}
                       >
-                        {item.iconNode ??
-                          (item.icon ? (
-                            <item.icon className="size-[19px]" />
-                          ) : null)}
+                        <span className="relative grid place-items-center">
+                          {item.iconNode ??
+                            (item.icon ? (
+                              <item.icon className="size-[19px]" />
+                            ) : null)}
+                          {item.badge ? (
+                            <span
+                              aria-label={`${item.badge} unread`}
+                              className="absolute -top-1.5 -right-2.5 grid min-w-4 place-items-center rounded-full bg-destructive px-1 text-[9px] leading-4 font-bold text-white tabular-nums ring-2 ring-background"
+                            >
+                              {item.badge > 9 ? "9+" : item.badge}
+                            </span>
+                          ) : null}
+                        </span>
                       </span>
                       <span
                         className={cn(
@@ -266,22 +283,26 @@ export function MobileDock({
                     >
                       <span
                         className={cn(
-                          "grid h-8 w-14 place-items-center rounded-full transition-[color,transform] duration-300",
+                          "grid h-8 w-12 place-items-center rounded-full transition-[color,transform] duration-300",
                           open
                             ? "scale-110 text-background"
-                            : "text-muted-foreground"
+                            : moreOn
+                              ? "scale-110 text-primary-foreground"
+                              : "text-muted-foreground"
                         )}
                       >
                         {open ? (
                           <X className="size-[19px]" />
                         ) : (
-                          <LayoutGrid className="size-[19px]" />
+                          <Ellipsis className="size-[19px]" />
                         )}
                       </span>
                       <span
                         className={cn(
                           "text-[10.5px] leading-none font-semibold",
-                          open ? "text-foreground" : "text-muted-foreground"
+                          open || moreOn
+                            ? "text-foreground"
+                            : "text-muted-foreground"
                         )}
                       >
                         {open ? "Close" : moreLabel}

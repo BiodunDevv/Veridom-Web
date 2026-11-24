@@ -13,6 +13,7 @@ import {
   type DockItem,
 } from "@/components/site/mobile-dock"
 import { useRouter } from "next/navigation"
+import { useChatUnread } from "@/features/chat/hooks"
 import { usePermissions, useSwitchOrg } from "@/features/lister/org-hooks"
 
 /** Phone tab bar for the lister area, built from what the role may use. */
@@ -26,15 +27,24 @@ export function ListerDock() {
     "/lister",
     "/lister/listings",
     "/lister/viewings",
-    "/lister/deals",
+    "/lister/inquiries",
   ]
+  const canChat = can(
+    "inquiry:read:any",
+    "inquiry:read:assigned",
+    "inquiry:respond"
+  )
+  const unreadChats = useChatUnread("lister", canChat).data ?? 0
   const primary = primaryPaths
     .map((path) => all.find((item) => item.path === path))
     .filter((item): item is NonNullable<typeof item> => Boolean(item))
   const rest = all.filter((item) => !primaryPaths.includes(item.path))
 
   const items: DockItem[] = primary.map((item) => ({
-    label: item.title.replace("My listings", "Listings"),
+    label: item.title
+      .replace("My listings", "Listings")
+      .replace("Messages", "Chats"),
+    badge: item.path === "/lister/inquiries" ? unreadChats : undefined,
     href: item.path,
     iconNode: item.icon,
     match: (p) =>
@@ -47,6 +57,7 @@ export function ListerDock() {
     <>
       <MobileDock
         items={items}
+        moreActive={(p) => !items.some((item) => item.match?.(p))}
         more={
           <div className="grid grid-cols-3 gap-2">
             {rest.map((item) => (

@@ -20,9 +20,10 @@ export function ViewingDetailPage({ id }: { id: string }) {
       <ViewingSummary
         inspection={viewing}
         backHref="/account/viewings"
+        side="customer"
         actions={<InspectionActions inspection={viewing} side="customer" />}
       />
-      <EvidencePhotos inspectionId={id} />
+      <EvidencePhotos inspectionId={id} status={viewing.status} />
     </>
   )
 }

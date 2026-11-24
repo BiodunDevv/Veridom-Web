@@ -4,13 +4,13 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
-import { ArrowLeft, Clock, Loader2, ShieldAlert } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 
-import { ReasonDialog } from "@/components/account/deal-actions"
 import { BankAccountForm } from "@/components/account/bank-account-form"
-import { PageHeader } from "@/components/account/page-header"
+import { ReasonDialog } from "@/components/account/deal-actions"
 import { StatusBadge } from "@/components/account/status-badge"
+import { useConfirm } from "@/components/lister/confirm-dialog"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,6 +18,7 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp"
+import { DetailSkeleton } from "@/components/ui/page-skeletons"
 import {
   useCancelDeal,
   useCheckout,
@@ -27,45 +28,131 @@ import {
   useReportProblem,
 } from "@/features/deals/hooks"
 import { formatCountdown, useCountdown } from "@/hooks/use-countdown"
-import { dealsApi, type Deal } from "@/lib/api/deals"
 import { getApiErrorMessage } from "@/lib/api/client"
+import { dealsApi, type Deal } from "@/lib/api/deals"
 import { formatDate, formatNaira } from "@/lib/format"
-import { DetailSkeleton } from "@/components/ui/page-skeletons"
+import { cn } from "@/lib/utils"
 
-function Panel({
+const HOLD_MS = 30 * 60_000
+const STEPS = ["Reserved", "Paid", "Move-in", "Done"]
+const ENDED: Record<string, string> = {
+  EXPIRED: "The hold ended before payment was made.",
+  CANCELLED: "This deal was cancelled.",
+  REFUND_DUE: "A refund is on its way to you.",
+  REFUNDED: "This deal was refunded.",
+  DISPUTED: "A problem was reported. The payout is paused while we review.",
+}
+
+function Card({
   title,
   children,
 }: {
-  title: string
+  title?: string
   children: React.ReactNode
 }) {
   return (
-    <section className="flex flex-col gap-4 rounded-xl bg-card p-5 shadow-md sm:p-6">
-      <h2 className="text-lg font-semibold">{title}</h2>
+    <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border sm:p-6">
+      {title ? <h2 className="text-base font-semibold">{title}</h2> : null}
       {children}
     </section>
   )
 }
 
-function PayPanel({ deal }: { deal: Deal }) {
-  const checkout = useCheckout()
-  const left = useCountdown(deal.holdExpiresAt)
-
+function Row({
+  label,
+  children,
+  strong,
+}: {
+  label: string
+  children: React.ReactNode
+  strong?: boolean
+}) {
   return (
-    <Panel title="Complete your payment">
-      <p className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Clock className="size-4" />
-        {left > 0 ? (
-          <>
-            Held for you for{" "}
-            <span className="font-semibold text-foreground">
-              {formatCountdown(left)}
-            </span>
-          </>
+    <div className="flex items-baseline justify-between gap-4 text-sm">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd
+        className={cn(
+          "text-right tabular-nums",
+          strong ? "text-base font-semibold" : "font-medium"
+        )}
+      >
+        {children}
+      </dd>
+    </div>
+  )
+}
+
+/** Four thin segments and one line of text: where the deal is, nothing more. */
+function Progress({ status }: { status: string }) {
+  if (ENDED[status])
+    return <p className="text-sm text-muted-foreground">{ENDED[status]}</p>
+  const step = status === "HELD" ? 1 : status === "PAID" ? 2 : 4
+  const label = step >= 4 ? "Completed" : STEPS[step]
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex gap-1.5" aria-hidden>
+        {STEPS.map((name, i) => (
+          <span
+            key={name}
+            className={cn(
+              "h-1 flex-1 rounded-full transition-colors duration-500",
+              i < step || step >= 4 ? "bg-primary" : "bg-muted"
+            )}
+          />
+        ))}
+      </div>
+      <p className="text-sm text-muted-foreground">
+        {step >= 4 ? (
+          "All done."
         ) : (
-          "The hold is ending. Pay now to try to keep it."
+          <>
+            Step {step + 1} of 4 ·{" "}
+            <span className="font-medium text-foreground">{label}</span>
+          </>
         )}
       </p>
+    </div>
+  )
+}
+
+function PayCard({ deal }: { deal: Deal }) {
+  const checkout = useCheckout()
+  const left = useCountdown(deal.holdExpiresAt)
+  const pct = Math.min(100, Math.max(0, ((left * 1000) / HOLD_MS) * 100))
+
+  return (
+    <Card title="Complete your payment">
+      <div className="flex flex-col gap-2">
+        <p className="flex items-baseline justify-between text-sm text-muted-foreground">
+          {left > 0 ? "Held for you" : "The hold is ending"}
+          {left > 0 ? (
+            <span
+              className={cn(
+                "text-lg font-semibold text-foreground tabular-nums",
+                left < 300 && "text-destructive"
+              )}
+            >
+              {formatCountdown(left)}
+            </span>
+          ) : null}
+        </p>
+        <div
+          role="progressbar"
+          aria-label="Time left on your hold"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(pct)}
+          className="h-1 overflow-hidden rounded-full bg-muted"
+        >
+          <span
+            className={cn(
+              "block h-full rounded-full transition-[width] duration-1000 ease-linear",
+              left < 300 ? "bg-destructive" : "bg-primary"
+            )}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
       <Button
         size="lg"
         disabled={checkout.isPending}
@@ -77,21 +164,19 @@ function PayPanel({ deal }: { deal: Deal }) {
         Pay {formatNaira(deal.payKobo ?? deal.totalKobo)}
       </Button>
       <p className="text-xs text-muted-foreground">
-        You&apos;ll pay securely with Paystack. After paying, this page updates
-        by itself.
+        Secure payment with Paystack. This page updates by itself afterwards.
       </p>
-    </Panel>
+    </Card>
   )
 }
 
-function MoveInPanel({ deal }: { deal: Deal }) {
+function MoveInCard({ deal }: { deal: Deal }) {
   const [code, setCode] = React.useState("")
   const confirm = useConfirmMoveIn(deal.id)
 
   return (
-    <Panel title="Move-in handover">
-      <p className="flex items-start gap-2 rounded-lg bg-secondary p-3 text-sm">
-        <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+    <Card title="Move-in handover">
+      <p className="text-sm text-muted-foreground">
         Only enter this code after you have the keys and have seen the property.
         Veridom never asks for it.
       </p>
@@ -112,15 +197,16 @@ function MoveInPanel({ deal }: { deal: Deal }) {
       <Button
         disabled={code.length !== 6 || confirm.isPending}
         onClick={() => confirm.mutate(code, { onSettled: () => setCode("") })}
+        className="self-start"
       >
         {confirm.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
         Confirm move-in
       </Button>
-    </Panel>
+    </Card>
   )
 }
 
-function RefundPanel({
+function RefundCard({
   dealId,
   refundId,
 }: {
@@ -128,15 +214,14 @@ function RefundPanel({
   refundId: string
 }) {
   const save = useRefundBankDetails(dealId, refundId)
-
   return (
-    <Panel title="Where should we send your refund?">
+    <Card title="Where should we send your refund?">
       <BankAccountForm
         pending={save.isPending}
         submitLabel="Send my refund here"
         onSubmit={(value) => save.mutate(value)}
       />
-    </Panel>
+    </Card>
   )
 }
 
@@ -145,6 +230,7 @@ export function DealDetailPage({ id }: { id: string }) {
   const dealQuery = useDeal(id)
   const cancel = useCancelDeal(id)
   const report = useReportProblem(id)
+  const confirm = useConfirm()
   const renewKey = React.useRef<string | null>(null)
 
   const renew = useMutation({
@@ -163,57 +249,66 @@ export function DealDetailPage({ id }: { id: string }) {
 
   const deal = dealQuery.data
 
-  if (dealQuery.isPending) {
-    return <DetailSkeleton />
-  }
+  if (dealQuery.isPending) return <DetailSkeleton />
   if (!deal)
     return <RetryState label="this deal" onRetry={() => dealQuery.refetch()} />
 
   const status = deal.status
   const canCancel = status === "HELD" || status === "PAID"
   const canReport = status === "PAID" || status === "COMPLETED"
+  const title = deal.listing?.title ?? "Your deal"
+  const listingId = deal.listing?.id ?? deal.listingId
 
   return (
     <>
       <Link
         href="/account/deals"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+        className="inline-flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" /> All deals
       </Link>
-      <PageHeader
-        title={deal.listing?.title ?? "Your deal"}
-        description={
-          deal.moveInDate ? `Move-in ${formatDate(deal.moveInDate)}` : undefined
-        }
-        actions={<StatusBadge status={status} />}
-      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="flex flex-col gap-6">
-          {status === "HELD" ? <PayPanel deal={deal} /> : null}
-          {status === "PAID" ? <MoveInPanel deal={deal} /> : null}
+      <header className="flex flex-col gap-1.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+          <StatusBadge status={status} />
+        </div>
+        {deal.moveInDate ? (
+          <p className="text-sm text-muted-foreground">
+            Move-in {formatDate(deal.moveInDate)}
+          </p>
+        ) : null}
+      </header>
+
+      <Card>
+        <Progress status={status} />
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
+        <div className="flex min-w-0 flex-col gap-4 lg:gap-6">
+          {status === "HELD" ? <PayCard deal={deal} /> : null}
+          {status === "PAID" ? <MoveInCard deal={deal} /> : null}
           {deal.refund?.status === "NEEDS_ATTENTION" ? (
-            <RefundPanel dealId={id} refundId={deal.refund.id} />
+            <RefundCard dealId={id} refundId={deal.refund.id} />
           ) : null}
           {status === "EXPIRED" ? (
-            <Panel title="This hold expired">
+            <Card title="This hold expired">
               <p className="text-sm text-muted-foreground">
                 If you paid just now, don&apos;t worry: a late payment is
                 honoured when the property is still free, otherwise it&apos;s
                 refunded.
               </p>
-            </Panel>
+            </Card>
           ) : null}
           {status === "DISPUTED" ? (
-            <Panel title="Under review">
+            <Card title="Under review">
               <p className="text-sm text-muted-foreground">
                 The payout is on hold while our team looks into your report.
               </p>
-            </Panel>
+            </Card>
           ) : null}
           {status === "COMPLETED" ? (
-            <Panel title="Staying on?">
+            <Card title="Staying on?">
               <p className="text-sm text-muted-foreground">
                 Renew to pay the next rent and recurring fees.
               </p>
@@ -227,33 +322,46 @@ export function DealDetailPage({ id }: { id: string }) {
                 ) : null}
                 Renew this rental
               </Button>
-            </Panel>
+            </Card>
           ) : null}
         </div>
 
         <aside className="flex flex-col gap-4">
-          <Panel title="Summary">
-            <dl className="flex flex-col gap-2 text-sm">
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">Total</dt>
-                <dd className="font-medium">{formatNaira(deal.totalKobo)}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
-                <dt className="text-muted-foreground">You pay</dt>
-                <dd className="font-semibold">
-                  {formatNaira(deal.payKobo ?? deal.totalKobo)}
-                </dd>
-              </div>
-              {deal.commissionCustomerKobo ? (
-                <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">Service fee</dt>
-                  <dd className="font-medium">
-                    {formatNaira(deal.commissionCustomerKobo)}
-                  </dd>
-                </div>
+          <Card title="Summary">
+            <dl className="flex flex-col gap-2.5">
+              <Row label="Property">
+                {listingId ? (
+                  <Link
+                    href={`/properties/${listingId}`}
+                    className="hover:text-primary hover:underline"
+                  >
+                    {title}
+                  </Link>
+                ) : (
+                  title
+                )}
+              </Row>
+              {deal.organizationName ? (
+                <Row label="Listed by">{deal.organizationName}</Row>
               ) : null}
+              {deal.tenancyStart && deal.tenancyEnd ? (
+                <Row label="Tenancy">
+                  {formatDate(deal.tenancyStart)} –{" "}
+                  {formatDate(deal.tenancyEnd)}
+                </Row>
+              ) : null}
+              <div className="my-1 border-t" />
+              <Row label="Rental total">{formatNaira(deal.totalKobo)}</Row>
+              {deal.commissionCustomerKobo ? (
+                <Row label="Service fee">
+                  {formatNaira(deal.commissionCustomerKobo)}
+                </Row>
+              ) : null}
+              <Row label="You pay" strong>
+                {formatNaira(deal.payKobo ?? deal.totalKobo)}
+              </Row>
             </dl>
-          </Panel>
+          </Card>
 
           {canCancel || canReport ? (
             <div className="flex flex-wrap gap-2">
@@ -261,7 +369,18 @@ export function DealDetailPage({ id }: { id: string }) {
                 <Button
                   variant="outline"
                   disabled={cancel.isPending}
-                  onClick={() => cancel.mutate(undefined)}
+                  onClick={() =>
+                    confirm.ask({
+                      title: "Cancel this deal?",
+                      description:
+                        status === "HELD"
+                          ? "The property is released and you won't be charged."
+                          : "Within 24 hours of paying you get a full refund. After that you'll need to report a problem instead.",
+                      confirmLabel: "Cancel deal",
+                      tone: "danger",
+                      run: () => cancel.mutateAsync(undefined),
+                    })
+                  }
                 >
                   {cancel.isPending ? (
                     <Loader2 className="size-4 animate-spin" />
@@ -284,6 +403,7 @@ export function DealDetailPage({ id }: { id: string }) {
           ) : null}
         </aside>
       </div>
+      {confirm.dialog}
     </>
   )
 }

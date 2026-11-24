@@ -51,13 +51,18 @@ export function ViewingDialog({
           <CalendarCheck /> Book a viewing
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Book a viewing</DialogTitle>
-          <DialogDescription>
-            {title}. Times are in Lagos time. The exact address is shared once
-            the lister confirms.
-          </DialogDescription>
+      <DialogContent className="max-h-[90svh] overflow-x-hidden overflow-y-auto sm:max-w-lg [&>*]:min-w-0">
+        <DialogHeader className="flex-row items-start gap-3 text-left">
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+            <CalendarCheck className="size-5" aria-hidden />
+          </span>
+          <div className="flex flex-col gap-1">
+            <DialogTitle>Book a viewing</DialogTitle>
+            <DialogDescription>
+              {title}. Times are in Lagos time. The exact address is shared once
+              the lister confirms.
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
         <SlotPicker
@@ -67,14 +72,20 @@ export function ViewingDialog({
           onChange={setSlot}
         />
 
-        <DialogFooter>
+        <DialogFooter className="items-center sm:justify-between">
+          <p className="text-xs text-muted-foreground">
+            The lister has 24 hours to confirm your request.
+          </p>
           <Button
+            size="lg"
             disabled={!slot || request.isPending}
             onClick={() => slot && request.mutate(slot)}
           >
             {request.isPending ? (
               <Loader2 className="size-4 animate-spin" />
-            ) : null}
+            ) : (
+              <CalendarCheck />
+            )}
             Request this time
           </Button>
         </DialogFooter>

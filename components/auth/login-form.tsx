@@ -14,6 +14,8 @@ import {
   setAuthUser,
 } from "@/features/auth/auth-slice"
 import { authApi } from "@/lib/api/auth"
+import { organizationsApi } from "@/lib/api/organizations"
+import { queryKeys } from "@/lib/query/keys"
 import { getApiErrorMessage, isApiError } from "@/lib/api/client"
 import { takeApiMessage } from "@/lib/api/last-message"
 import { useAppDispatch, useAppSelector } from "@/lib/store/store"
@@ -42,6 +44,10 @@ export function LoginForm({ embedded }: { embedded?: EmbeddedAuth }) {
   // Load the session after login; a 401 here means the cookie was not kept.
   const completeSignIn = async () => {
     try {
+      // Anything cached belongs to whoever was signed in before.
+      queryClient.removeQueries({
+        predicate: (query) => query.queryKey[0] !== "me",
+      })
       const currentUser = await queryClient.fetchQuery({
         queryKey: ["me"],
         queryFn: authApi.me,
@@ -57,11 +63,29 @@ export function LoginForm({ embedded }: { embedded?: EmbeddedAuth }) {
         description: takeApiMessage("Welcome back"),
       })
       const next = new URLSearchParams(window.location.search).get("next")
-      const safeNext =
+      let leaveLister = false
+      let safeNext =
         next && next.startsWith("/") && !next.startsWith("//") ? next : null
+      // A lister page is only for people who belong to a lister: everyone else
+      // lands on their profile instead of a dashboard they can't use.
+      if (safeNext?.startsWith("/lister")) {
+        const mine = await queryClient
+          .fetchQuery({
+            queryKey: queryKeys.org.mine,
+            queryFn: organizationsApi.mine,
+            staleTime: 0,
+          })
+          .catch(() => null)
+        if (!mine?.organizations.length) {
+          safeNext = null
+          leaveLister = true
+        }
+      }
       embedded?.close()
-      if (safeNext || !embedded) {
-        router.push(safeNext ?? redirectPath ?? "/account")
+      if (safeNext || !embedded || leaveLister) {
+        router.push(
+          safeNext ?? (leaveLister ? null : redirectPath) ?? "/account"
+        )
       }
     } catch (error) {
       dispatch(clearAuthState())

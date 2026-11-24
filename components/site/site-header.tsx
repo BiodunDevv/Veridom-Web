@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
+import { ListerShortcutButton } from "@/components/account/lister-shortcut"
 import { useAuthModal } from "@/components/auth/auth-modal"
 import { Logo } from "@/components/logo"
 import { MessagesButton } from "@/components/chat/messages-button"
@@ -101,6 +102,7 @@ export function SiteHeader({ dock = true }: { dock?: boolean }) {
               <ThemeToggleButton className="size-7 p-1.5 sm:size-8 sm:p-1.5 lg:size-9 lg:p-2" />
               {me ? (
                 <>
+                  <ListerShortcutButton />
                   <ProfileButton
                     name={me.firstName}
                     initials={initialsOf(me.firstName, me.lastName)}

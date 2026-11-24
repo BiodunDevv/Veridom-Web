@@ -503,3 +503,21 @@ input:-webkit-autofill:focus {
     background-color 600000s 0s,
     color 600000s 0s;
 }
+
+/* A gentle left-pointing nudge for "go back" arrows. */
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-3px);
+  }
+}
+
+/* A soft light sweep across a photo that is still uploading. */
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}

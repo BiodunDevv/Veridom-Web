@@ -29,12 +29,16 @@ export const getStatusVariant = (
 
 export const nairaToKobo = (naira: number) => Math.round(naira * 100)
 
+/** 12-hour clock in Lagos time, e.g. "2:00 PM". */
 export const formatTime = (value: string) =>
-  new Date(value).toLocaleTimeString("en-NG", {
-    hour: "numeric",
-    minute: "2-digit",
-    timeZone: "Africa/Lagos",
-  })
+  new Date(value)
+    .toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+      timeZone: "Africa/Lagos",
+    })
+    .replace(/\s?(am|pm)$/i, (_, p: string) => ` ${p.toUpperCase()}`)
 
 export const formatDay = (value: string) =>
   new Date(value).toLocaleDateString("en-NG", {

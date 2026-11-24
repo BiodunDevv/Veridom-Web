@@ -17,6 +17,7 @@ import {
   ListSkeleton,
   timeAgo,
 } from "@/components/lister/lister-ui"
+import { FilterTabs } from "@/components/account/filter-tabs"
 import { StatusBadge } from "@/components/account/status-badge"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
@@ -42,6 +43,16 @@ export function ListerDealsPage() {
   const items = query.data ?? []
   const paid = items.filter((d) => d.status === "PAID")
   const held = items.filter((d) => d.status === "HELD")
+  const [filter, setFilter] = React.useState<
+    "all" | "held" | "paid" | "closed"
+  >("all")
+  const closed = items.filter((d) =>
+    ["CANCELLED", "EXPIRED", "REFUNDED", "REFUND_DUE", "DISPUTED"].includes(
+      d.status
+    )
+  )
+  const buckets = { all: items, held, paid, closed }
+  const shown = buckets[filter]
   const paidKobo = paid.reduce((n, d) => n + (d.totalKobo ?? d.payKobo ?? 0), 0)
 
   return (
@@ -86,55 +97,78 @@ export function ListerDealsPage() {
           hint="When a customer reserves one of your listings, the deal shows up here with its payment status."
         />
       ) : (
-        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
-          {items.map((deal) => (
-            <li
-              key={deal.id}
-              className="group flex flex-col gap-3 rounded-xl bg-card p-4 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl sm:flex-row sm:items-center sm:justify-between sm:p-5"
-            >
-              <div className="flex min-w-0 items-center gap-4">
-                <span className="hidden size-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 sm:grid">
-                  <Handshake className="size-5" aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <Link
-                    href={`/lister/deals/${deal.id}`}
-                    className="flex items-center gap-1 truncate font-semibold group-hover:text-primary"
-                  >
-                    <span className="truncate">
-                      {deal.listing?.title ?? "Property"}
+        <>
+          <FilterTabs
+            label="Filter deals"
+            value={filter}
+            onChange={setFilter}
+            tabs={[
+              { value: "all", label: "All", count: buckets.all.length },
+              { value: "held", label: "On hold", count: buckets.held.length },
+              { value: "paid", label: "Paid", count: buckets.paid.length },
+              {
+                value: "closed",
+                label: "Closed",
+                count: buckets.closed.length,
+              },
+            ]}
+          />
+          {shown.length === 0 ? (
+            <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground shadow-md">
+              Nothing in this view.
+            </p>
+          ) : (
+            <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
+              {shown.map((deal) => (
+                <li
+                  key={deal.id}
+                  className="group flex flex-col gap-3 rounded-xl bg-card p-4 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl sm:flex-row sm:items-center sm:justify-between sm:p-5"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <span className="hidden size-12 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 sm:grid">
+                      <Handshake className="size-5" aria-hidden />
                     </span>
-                    <ArrowUpRight
-                      className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
-                      aria-hidden
-                    />
-                  </Link>
-                  <p className="text-sm text-muted-foreground">
-                    {deal.moveInDate
-                      ? `Move-in ${formatDate(deal.moveInDate)}`
-                      : `Created ${timeAgo(deal.createdAt)}`}
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="font-semibold tabular-nums">
-                  {formatNaira(deal.totalKobo ?? deal.payKobo)}
-                </span>
-                <StatusBadge status={deal.status} />
-                {deal.status === "PAID" && can("deal:manage") ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={handover.isPending}
-                    onClick={() => handover.mutate(deal.id)}
-                  >
-                    <KeyRound /> Handover code
-                  </Button>
-                ) : null}
-              </div>
-            </li>
-          ))}
-        </ul>
+                    <div className="min-w-0">
+                      <Link
+                        href={`/lister/deals/${deal.id}`}
+                        className="flex items-center gap-1 truncate font-semibold group-hover:text-primary"
+                      >
+                        <span className="truncate">
+                          {deal.listing?.title ?? "Property"}
+                        </span>
+                        <ArrowUpRight
+                          className="size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                          aria-hidden
+                        />
+                      </Link>
+                      <p className="text-sm text-muted-foreground">
+                        {deal.moveInDate
+                          ? `Move-in ${formatDate(deal.moveInDate)}`
+                          : `Created ${timeAgo(deal.createdAt)}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="font-semibold tabular-nums">
+                      {formatNaira(deal.totalKobo ?? deal.payKobo)}
+                    </span>
+                    <StatusBadge status={deal.status} />
+                    {deal.status === "PAID" && can("deal:manage") ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={handover.isPending}
+                        onClick={() => handover.mutate(deal.id)}
+                      >
+                        <KeyRound /> Handover code
+                      </Button>
+                    ) : null}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
 
       <Dialog

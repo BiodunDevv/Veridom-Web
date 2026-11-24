@@ -152,14 +152,20 @@ export const inquiriesApi = {
       `${base(side)}/messages/${messageId}/reaction`,
       { emoji }
     ),
-  reactions: (side: ChatSide, id: string, since?: string) =>
+  /**
+   * The API requires `since`, even on the first call. Without one we ask for
+   * every change since the beginning, then the caller reuses `serverTime`.
+   */
+  reactions: (
+    side: ChatSide,
+    id: string,
+    since: string = new Date(0).toISOString()
+  ) =>
     get<{
       items: { messageId: string; reactions: Reaction[] }[]
       serverTime: string
     }>(
-      `${base(side)}/inquiries/${id}/reactions${
-        since ? `?since=${encodeURIComponent(since)}` : ""
-      }`
+      `${base(side)}/inquiries/${id}/reactions?since=${encodeURIComponent(since)}`
     ),
   report: (side: ChatSide, messageId: string, reason: string) =>
     send<unknown>("POST", `${base(side)}/messages/${messageId}/report`, {

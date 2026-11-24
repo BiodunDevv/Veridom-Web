@@ -123,10 +123,32 @@ export const inspectionsApi = {
       (await apiRequest<ApiSuccess<Listish<Inspection>>>("/api/v1/inspections"))
         .data
     ).map(normalizeInspection),
+  /**
+   * `from` / `to` are Lagos calendar days (YYYY-MM-DD). The API wants full ISO
+   * datetimes with an offset, and only serves times from 3 hours to 14 days
+   * ahead, so each bound is turned into an instant and kept inside that window.
+   */
   slots: async (listingId: string, from: string, to: string) => {
+    const HOUR = 3_600_000
+    const now = Date.now()
+    const earliest = now + 3 * HOUR + 60_000
+    const latest = now + 14 * 24 * HOUR - 60_000
+    // Lagos is UTC+1 all year (no daylight saving).
+    const start = Math.min(
+      Math.max(Date.parse(`${from}T00:00:00+01:00`), earliest),
+      latest
+    )
+    const end = Math.min(
+      Math.max(Date.parse(`${to}T23:59:59+01:00`), start),
+      latest
+    )
+    const query = new URLSearchParams({
+      from: new Date(start).toISOString(),
+      to: new Date(end).toISOString(),
+    })
     const data = (
       await apiRequest<ApiSuccess<Listish<Slot | string>>>(
-        `/api/v1/listings/${listingId}/slots?from=${from}&to=${to}`
+        `/api/v1/listings/${listingId}/slots?${query}`
       )
     ).data
     return unwrap(data).map((slot) =>

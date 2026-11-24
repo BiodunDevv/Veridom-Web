@@ -124,7 +124,7 @@ export function Composer({
   }
 
   return (
-    <div className="border-t bg-background/95 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur sm:px-4">
+    <div className="shrink-0 border-t bg-background px-3 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-3">
       {drafts.length ? (
         <ul className="mb-2 flex gap-2 overflow-x-auto pb-1">
           {drafts.map((d) => (
@@ -161,7 +161,7 @@ export function Composer({
         </ul>
       ) : null}
 
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-2 [&>*]:shrink-0 [&>.relative]:shrink">
         <button
           type="button"
           className="grid size-11 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors outline-none hover:bg-accent hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
@@ -202,7 +202,7 @@ export function Composer({
                 void submit()
               }
             }}
-            className="max-h-[132px] min-h-11 w-full resize-none rounded-3xl border border-input bg-card px-4 py-[10px] text-[15px] leading-snug outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
+            className="block max-h-[132px] min-h-11 w-full resize-none rounded-3xl border border-input bg-card px-4 py-[10px] text-[15px] leading-snug outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60"
           />
           {text.length > MAX - 300 ? (
             <span

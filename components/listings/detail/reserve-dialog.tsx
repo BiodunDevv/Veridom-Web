@@ -8,6 +8,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { DatePicker } from "@/components/ui/date-picker"
 import {
   Dialog,
   DialogContent,
@@ -71,7 +72,7 @@ export function ReserveDialog({
           Reserve now
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="gap-5 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Reserve this property</DialogTitle>
           <DialogDescription>
@@ -83,30 +84,37 @@ export function ReserveDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 text-sm">
-          <label className="flex flex-col gap-2">
-            <span className="font-medium">Move-in date</span>
-            <input
-              type="date"
-              required
-              min={lagosDate(0)}
-              max={lagosDate(30)}
+        <div className="flex flex-col gap-5 pt-1 text-sm">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <label htmlFor="move-in-date" className="font-medium">
+                Move-in date
+              </label>
+              <span className="text-xs text-muted-foreground">
+                Pick a day within the next 30 days.
+              </span>
+            </div>
+            <DatePicker
+              id="move-in-date"
               value={moveInDate}
-              onChange={(e) => change(setMoveInDate)(e.target.value)}
-              className="h-12 rounded-lg border border-input bg-background px-4 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+              onChange={change(setMoveInDate)}
+              maxDays={30}
+              className="gap-3"
+              shortcuts={[
+                { label: "In a week", days: 7 },
+                { label: "In 2 weeks", days: 14 },
+                { label: "In a month", days: 30 },
+              ]}
             />
-            <span className="text-xs text-muted-foreground">
-              Within the next 30 days.
-            </span>
-          </label>
+          </div>
 
-          <label className="flex items-start gap-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border bg-muted/30 p-3.5 transition-colors hover:bg-muted/50">
             <Checkbox
               checked={ack}
               onCheckedChange={(v) => change(setAck)(v === true)}
               className="mt-0.5"
             />
-            <span className="text-muted-foreground">
+            <span className="leading-snug text-muted-foreground">
               I understand I&apos;m reserving without a completed viewing. Skip
               this if you&apos;ve already viewed the property.
             </span>

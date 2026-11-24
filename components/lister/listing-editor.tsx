@@ -35,6 +35,7 @@ import {
 } from "@/components/lister/listing-form"
 import { NewListingWizard } from "@/components/lister/new-listing-wizard"
 import { PhotosManager } from "@/components/lister/photos-manager"
+import { ViewingTimesCard } from "@/components/lister/viewing-times-card"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
 import {
@@ -380,6 +381,9 @@ function EditListing({ listing }: { listing: ListerListing }) {
         </div>
         <aside className="flex flex-col gap-4 lg:sticky lg:top-4">
           {editable ? <ListingReadiness items={readiness} /> : null}
+          {can("inspection:manage") && listing.status !== "CLOSED" ? (
+            <ViewingTimesCard listingId={listing.id} />
+          ) : null}
         </aside>
       </div>
       {confirm.dialog}

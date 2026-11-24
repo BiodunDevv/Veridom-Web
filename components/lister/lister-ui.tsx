@@ -7,6 +7,26 @@ import { PatternBg } from "@/components/ui/pattern-bg"
 import { RowsSkeleton } from "@/components/ui/page-skeletons"
 import { cn } from "@/lib/utils"
 
+/** Counts a number up from 0 when it first appears (skipped for reduced motion). */
+function CountUp({ value }: { value: number }) {
+  const [shown, setShown] = React.useState(0)
+  React.useEffect(() => {
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches
+    let frame = 0
+    const start = performance.now()
+    const tick = (now: number) => {
+      const t = reduced ? 1 : Math.min((now - start) / 650, 1)
+      setShown(Math.round(value * (1 - Math.pow(1 - t, 3))))
+      if (t < 1) frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [value])
+  return <>{value === 0 ? 0 : shown}</>
+}
+
 export type HeroStat = {
   label: string
   value: React.ReactNode
@@ -43,11 +63,11 @@ export function ListerHero({
         aria-hidden
         className="absolute -top-24 -left-16 -z-10 size-64 rounded-full bg-primary/10 blur-3xl"
       />
-      <div className="flex flex-col gap-5 p-5 sm:p-6">
+      <div className="flex flex-col gap-3.5 p-4 sm:gap-5 sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex items-start gap-3.5">
-            <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
-              <Icon className="size-5" aria-hidden />
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15 sm:size-11">
+              <Icon className="size-[18px] sm:size-5" aria-hidden />
             </span>
             <div className="flex flex-col gap-1">
               {eyebrow ? (
@@ -55,11 +75,11 @@ export function ListerHero({
                   {eyebrow}
                 </span>
               ) : null}
-              <h1 className="text-2xl leading-tight font-semibold tracking-tight">
+              <h1 className="text-xl leading-tight font-semibold tracking-tight sm:text-2xl">
                 {title}
               </h1>
               {description ? (
-                <p className="max-w-xl text-sm text-muted-foreground">
+                <p className="line-clamp-2 max-w-xl text-sm text-muted-foreground sm:line-clamp-none">
                   {description}
                 </p>
               ) : null}
@@ -71,35 +91,52 @@ export function ListerHero({
         </div>
 
         {stats?.length ? (
-          <dl className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
-            {stats.map((stat) => (
+          <dl className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
+            {stats.map((stat, i) => (
               <div
                 key={stat.label}
-                className="flex flex-col gap-1 rounded-xl border bg-background/70 p-3.5 backdrop-blur-sm"
+                style={{ animationDelay: `${i * 60}ms` }}
+                className="flex animate-in items-center gap-2.5 rounded-xl border bg-background/70 p-2.5 backdrop-blur-sm fade-in slide-in-from-bottom-1 sm:flex-col sm:items-stretch sm:gap-1 sm:p-3.5"
               >
-                <dt className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                  {stat.icon ? (
-                    <stat.icon
-                      className={cn(
-                        "size-3.5",
-                        stat.tone === "good" && "text-primary",
-                        stat.tone === "warn" &&
-                          "text-amber-600 dark:text-amber-400"
-                      )}
-                      aria-hidden
-                    />
-                  ) : null}
-                  {stat.label}
-                </dt>
-                <dd className="text-xl font-semibold tracking-tight tabular-nums">
-                  {loading ? (
-                    <span className="inline-block h-6 w-10 animate-pulse rounded bg-muted" />
-                  ) : (
-                    stat.value
-                  )}
-                </dd>
+                {stat.icon ? (
+                  <span
+                    className={cn(
+                      "grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground sm:hidden",
+                      stat.tone === "good" && "bg-primary/10 text-primary",
+                      stat.tone === "warn" &&
+                        "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                    )}
+                  >
+                    <stat.icon className="size-4" aria-hidden />
+                  </span>
+                ) : null}
+                <div className="flex min-w-0 flex-col-reverse sm:flex-col sm:gap-1">
+                  <dt className="flex items-center gap-1.5 truncate text-[11px] font-medium text-muted-foreground sm:text-xs">
+                    {stat.icon ? (
+                      <stat.icon
+                        className={cn(
+                          "hidden size-3.5 sm:block",
+                          stat.tone === "good" && "text-primary",
+                          stat.tone === "warn" &&
+                            "text-amber-600 dark:text-amber-400"
+                        )}
+                        aria-hidden
+                      />
+                    ) : null}
+                    <span className="truncate">{stat.label}</span>
+                  </dt>
+                  <dd className="truncate text-lg leading-tight font-semibold tracking-tight tabular-nums sm:text-xl">
+                    {loading ? (
+                      <span className="inline-block h-5 w-8 animate-pulse rounded bg-muted" />
+                    ) : typeof stat.value === "number" ? (
+                      <CountUp value={stat.value} />
+                    ) : (
+                      stat.value
+                    )}
+                  </dd>
+                </div>
                 {stat.hint ? (
-                  <span className="truncate text-xs text-muted-foreground">
+                  <span className="hidden truncate text-xs text-muted-foreground sm:block">
                     {stat.hint}
                   </span>
                 ) : null}

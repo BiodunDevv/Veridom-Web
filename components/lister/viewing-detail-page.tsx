@@ -20,6 +20,7 @@ export function ListerViewingDetailPage({ id }: { id: string }) {
     <ViewingSummary
       inspection={viewing}
       backHref="/lister/viewings"
+      side="lister"
       actions={
         can("inspection:manage") ? (
           <InspectionActions inspection={viewing} side="lister" />

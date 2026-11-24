@@ -6,7 +6,7 @@ import {
   HistoryIcon,
   CalendarCheckIcon,
   HandshakeIcon,
-  LayoutGridIcon,
+  LayoutDashboardIcon,
   MessageSquareIcon,
   ShieldCheckIcon,
   SettingsIcon,
@@ -17,7 +17,7 @@ type Item = SidebarNavGroup["items"][number] & { needs?: Permission[] }
 type Group = { label?: string; items: Item[] }
 
 const groups: Group[] = [
-  { items: [{ title: "Overview", path: "/lister", icon: <LayoutGridIcon /> }] },
+  { items: [{ title: "Overview", path: "/lister", icon: <LayoutDashboardIcon /> }] },
   {
     label: "Listings",
     items: [

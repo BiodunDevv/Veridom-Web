@@ -11,6 +11,7 @@ import {
   MapPin,
 } from "lucide-react"
 
+import { FilterTabs } from "@/components/account/filter-tabs"
 import { StatusBadge } from "@/components/account/status-badge"
 import {
   ListerEmpty,
@@ -62,6 +63,24 @@ export function ViewingList({
     ["REQUESTED", "PROPOSED"].includes(v.status)
   ).length
   const confirmed = items.filter((v) => v.status === "CONFIRMED").length
+  const [filter, setFilter] = React.useState<
+    "all" | "upcoming" | "reply" | "past"
+  >("all")
+  const isOpen = (v: Inspection) =>
+    !["CANCELLED", "DECLINED", "EXPIRED", "COMPLETED", "NO_SHOW"].includes(
+      v.status
+    )
+  const buckets = {
+    all: items,
+    upcoming: items.filter(
+      (v) => isOpen(v) && v.startsAt && new Date(v.startsAt).getTime() > now
+    ),
+    reply: items.filter((v) => ["REQUESTED", "PROPOSED"].includes(v.status)),
+    past: items.filter(
+      (v) => !isOpen(v) || (v.startsAt && new Date(v.startsAt).getTime() <= now)
+    ),
+  }
+  const shown = buckets[filter]
   const next = [...upcoming].sort(
     (a, b) => +new Date(a.startsAt!) - +new Date(b.startsAt!)
   )[0]
@@ -118,48 +137,75 @@ export function ViewingList({
           }
         />
       ) : (
-        <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
-          {items.map((viewing) => (
-            <li key={viewing.id}>
-              <Link
-                href={`${basePath}/${viewing.id}`}
-                className="group flex items-center gap-4 rounded-xl bg-card p-4 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl sm:p-5"
-              >
-                {viewing.startsAt ? (
-                  <span className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
-                    <span className="text-[10px] font-semibold tracking-wide uppercase">
-                      {lagos(viewing.startsAt, { month: "short" })}
-                    </span>
-                    <span className="text-xl leading-none font-semibold tabular-nums">
-                      {lagos(viewing.startsAt, { day: "numeric" })}
-                    </span>
-                  </span>
-                ) : null}
-                <div className="min-w-0 flex-1 space-y-0.5">
-                  <p className="truncate font-semibold group-hover:text-primary">
-                    {viewing.listing?.title ?? "Property viewing"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {viewing.startsAt
-                      ? `${lagos(viewing.startsAt, { weekday: "long" })} · ${formatTime(viewing.startsAt)}`
-                      : "Time to be agreed"}
-                  </p>
-                  {viewing.listing?.addressLine ? (
-                    <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                      <MapPin className="size-3 shrink-0" aria-hidden />
-                      {viewing.listing.addressLine}
-                    </p>
-                  ) : null}
-                </div>
-                <StatusBadge status={viewing.status} />
-                <ArrowUpRight
-                  className="hidden size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary sm:block"
-                  aria-hidden
-                />
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <>
+          <FilterTabs
+            label="Filter viewings"
+            value={filter}
+            onChange={setFilter}
+            tabs={[
+              { value: "all", label: "All", count: buckets.all.length },
+              {
+                value: "upcoming",
+                label: "Upcoming",
+                count: buckets.upcoming.length,
+              },
+              {
+                value: "reply",
+                label: "Needs a reply",
+                count: buckets.reply.length,
+              },
+              { value: "past", label: "Past", count: buckets.past.length },
+            ]}
+          />
+          {shown.length === 0 ? (
+            <p className="rounded-2xl bg-card p-8 text-center text-sm text-muted-foreground shadow-md">
+              Nothing in this view.
+            </p>
+          ) : (
+            <ul className="grid grid-cols-[minmax(0,1fr)] gap-3">
+              {shown.map((viewing) => (
+                <li key={viewing.id}>
+                  <Link
+                    href={`${basePath}/${viewing.id}`}
+                    className="group flex items-center gap-4 rounded-xl bg-card p-4 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl sm:p-5"
+                  >
+                    {viewing.startsAt ? (
+                      <span className="flex size-14 shrink-0 flex-col items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-primary/15">
+                        <span className="text-[10px] font-semibold tracking-wide uppercase">
+                          {lagos(viewing.startsAt, { month: "short" })}
+                        </span>
+                        <span className="text-xl leading-none font-semibold tabular-nums">
+                          {lagos(viewing.startsAt, { day: "numeric" })}
+                        </span>
+                      </span>
+                    ) : null}
+                    <div className="min-w-0 flex-1 space-y-0.5">
+                      <p className="truncate font-semibold group-hover:text-primary">
+                        {viewing.listing?.title ?? "Property viewing"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {viewing.startsAt
+                          ? `${lagos(viewing.startsAt, { weekday: "long" })} · ${formatTime(viewing.startsAt)}`
+                          : "Time to be agreed"}
+                      </p>
+                      {viewing.listing?.addressLine ? (
+                        <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                          <MapPin className="size-3 shrink-0" aria-hidden />
+                          {viewing.listing.addressLine}
+                        </p>
+                      ) : null}
+                    </div>
+                    <StatusBadge status={viewing.status} />
+                    <ArrowUpRight
+                      className="hidden size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary sm:block"
+                      aria-hidden
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </>
   )

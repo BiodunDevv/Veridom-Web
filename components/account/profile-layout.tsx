@@ -93,6 +93,8 @@ const isActive = (item: Item, pathname: string) =>
     ? pathname === item.href || pathname.startsWith(`${item.href}/`)
     : pathname === item.href
 
+const TAB_PAGES = ["/account/viewings", "/account/messages", "/account/deals"]
+
 /**
  * On phones, pages one level below the profile get a way back to it. Detail
  * pages (a deal, a viewing) already carry their own back link.
@@ -100,6 +102,8 @@ const isActive = (item: Item, pathname: string) =>
 function MobileBackBar({ pathname }: { pathname: string }) {
   const depth = pathname.split("/").filter(Boolean).length
   if (depth !== 2) return null
+  // Viewings, chats and deals are tabs in the bottom bar: no "back" needed.
+  if (TAB_PAGES.some((p) => pathname === p)) return null
   return (
     <Link
       href="/account"
@@ -129,7 +133,7 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
       <SiteHeader dock={false} />
       <main className="flex-1 bg-muted/60 px-4 py-6 pb-32 sm:px-8 lg:px-12 lg:py-12 lg:pb-12">
         <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-8">
-          <aside className="flex flex-col gap-4 lg:sticky lg:top-28 lg:self-start">
+          <aside className="hidden flex-col gap-4 lg:sticky lg:top-28 lg:flex lg:self-start">
             <div className="hidden items-center gap-3 rounded-2xl bg-card p-4 shadow-md lg:flex">
               <span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary text-base font-semibold text-primary-foreground">
                 {initialsOf(me?.firstName, me?.lastName)}

@@ -163,3 +163,24 @@ export const useAcceptInvite = (onDone: () => void) =>
     invalidate: [["org"]],
     onSuccess: onDone,
   })
+
+/**
+ * Members who can run viewings: active, with a role that holds `inspection:manage`.
+ * The API identifies an attendee by their **user id**, not the membership id.
+ */
+export function useAttendees(enabled = true) {
+  const members = useMembers(enabled)
+  const roles = useRoles(enabled)
+  const canRun = new Set(
+    (roles.data ?? [])
+      .filter((role) => role.permissions.includes("inspection:manage"))
+      .map((role) => role.id)
+  )
+  const options = (members.data ?? [])
+    .filter((m) => m.status === "ACTIVE" && canRun.has(m.roleId))
+    .map((m) => ({
+      value: m.userId,
+      label: `${m.firstName} ${m.lastName}`.trim(),
+    }))
+  return { options, isPending: members.isPending || roles.isPending }
+}
