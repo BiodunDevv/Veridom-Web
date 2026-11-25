@@ -36,6 +36,8 @@
   --border: oklch(0.86 0.025 150);
   --input: oklch(0.86 0.025 150);
   --ring: oklch(0.62 0.13 152);
+  /* Contour pattern lines (PatternBg): deep green on light surfaces. */
+  --pattern-line: oklch(0.45 0.1 152 / 0.7);
   --chart-1: oklch(0.52 0.14 152);
   --chart-2: oklch(0.6 0.13 165);
   --chart-3: oklch(0.42 0.09 170);
@@ -81,6 +83,8 @@
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 14%);
   --ring: oklch(0.55 0.1 152);
+  /* Soft bright green so the lines read on near-black cards. */
+  --pattern-line: oklch(0.72 0.12 152 / 0.55);
   --chart-1: oklch(0.78 0.17 152);
   --chart-2: oklch(0.7 0.15 170);
   --chart-3: oklch(0.6 0.12 175);

@@ -3,12 +3,13 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Building2, Loader2, MessageSquareText, UserCheck } from "lucide-react"
+import { Building2, Loader2, UserCheck } from "lucide-react"
 
 import { basePathFor, inboxTime } from "@/components/chat/chat-utils"
 import { initialsOf } from "@/components/lister/lister-ui"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
+import { Illustration } from "@/components/ui/illustration"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useInbox } from "@/features/chat/hooks"
 import type { ChatSide, InboxItem } from "@/lib/api/inquiries"
@@ -185,10 +186,8 @@ export function InboxList({ side }: { side: ChatSide }) {
         ) : query.isError ? (
           <RetryState label="your messages" onRetry={() => query.refetch()} />
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-14 text-center">
-            <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary">
-              <MessageSquareText className="size-5" aria-hidden />
-            </span>
+          <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
+            <Illustration name="chats" size="sm" className="mb-1" />
             <p className="font-semibold">
               {filter === "unread"
                 ? "No unread messages"

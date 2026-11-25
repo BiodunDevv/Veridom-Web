@@ -25,7 +25,6 @@ import { ListerHero } from "@/components/lister/lister-ui"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
 import { DetailSkeleton } from "@/components/ui/page-skeletons"
-import { PatternBg } from "@/components/ui/pattern-bg"
 import { useHandoverCode, useListerDeal } from "@/features/lister/ops-hooks"
 import { usePermissions } from "@/features/lister/org-hooks"
 import { formatCalendarDate, formatDate, formatNaira } from "@/lib/format"
@@ -401,7 +400,6 @@ export function ListerDealDetailPage({ id }: { id: string }) {
           </Card>
 
           <section className="relative isolate overflow-hidden rounded-2xl bg-card p-4 shadow-md sm:p-6">
-            <PatternBg className="-z-10 [mask-image:linear-gradient(to_bottom,black,transparent_80%)]" />
             <h2 className="mb-3 flex items-center gap-2.5 text-base font-semibold sm:text-lg">
               <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                 <ShieldCheck className="size-4" />

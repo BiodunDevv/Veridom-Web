@@ -96,6 +96,7 @@ export function DealsPage() {
       ) : deals.length === 0 ? (
         <ListerEmpty
           icon={Handshake}
+          art="deals"
           title="No deals yet"
           hint="When you reserve a property it appears here, with its payment and move-in status."
           action={

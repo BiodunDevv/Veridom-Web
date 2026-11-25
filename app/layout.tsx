@@ -19,6 +19,12 @@ export const metadata: Metadata = {
   title: { default: `${SITE_NAME} | ${SITE_TAGLINE}`, template: "%s" },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
+  // Home screen on iPhone: the name under the icon and a full-screen app.
+  appleWebApp: {
+    capable: true,
+    title: SITE_NAME,
+    statusBarStyle: "default",
+  },
   openGraph: {
     type: "website",
     siteName: SITE_NAME,

@@ -18,6 +18,7 @@ import { toast } from "sonner"
 import { StatusBadge } from "@/components/account/status-badge"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
+import { Illustration } from "@/components/ui/illustration"
 import { PatternBg } from "@/components/ui/pattern-bg"
 import { DetailSkeleton } from "@/components/ui/page-skeletons"
 import { dealsApi, type Deal } from "@/lib/api/deals"
@@ -146,27 +147,37 @@ export function PaymentReturnPage({ id }: { id: string }) {
       >
         <PatternBg className="-z-10 [mask-image:linear-gradient(to_bottom,black,transparent_70%)]" />
 
-        <div className="mx-auto mb-5 grid size-16 place-items-center">
-          <span
-            className={cn(
-              "relative grid size-16 place-items-center rounded-full transition-colors duration-500",
-              tone === "good" && "bg-primary text-primary-foreground shadow-md",
-              tone === "wait" && "bg-primary/10 text-primary",
-              tone === "warn" &&
-                "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-            )}
-          >
+        {view === "success" ? (
+          <Illustration
+            name="paymentHeld"
+            size="lg"
+            priority
+            className="mx-auto mb-4 animate-in duration-500 zoom-in-95 fade-in"
+          />
+        ) : (
+          <div className="mx-auto mb-5 grid size-16 place-items-center">
             <span
-              key={view}
-              className="animate-in duration-500 zoom-in-50 fade-in"
+              className={cn(
+                "relative grid size-16 place-items-center rounded-full transition-colors duration-500",
+                tone === "good" &&
+                  "bg-primary text-primary-foreground shadow-md",
+                tone === "wait" && "bg-primary/10 text-primary",
+                tone === "warn" &&
+                  "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+              )}
             >
-              {icon}
+              <span
+                key={view}
+                className="animate-in duration-500 zoom-in-50 fade-in"
+              >
+                {icon}
+              </span>
+              {tone === "good" ? (
+                <span className="absolute inset-0 rounded-full bg-primary/30 [animation-duration:2.4s] [animation-iteration-count:2] motion-safe:animate-ping" />
+              ) : null}
             </span>
-            {tone === "good" ? (
-              <span className="absolute inset-0 rounded-full bg-primary/30 [animation-duration:2.4s] [animation-iteration-count:2] motion-safe:animate-ping" />
-            ) : null}
-          </span>
-        </div>
+          </div>
+        )}
 
         <h1
           key={heading}

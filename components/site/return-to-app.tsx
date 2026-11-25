@@ -3,17 +3,8 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  ArrowLeft,
-  Building2,
-  CalendarCheck,
-  Handshake,
-  MessageSquare,
-  Search,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react"
 
+import { I8Icon, type I8Name } from "@/components/ui/i8-icon"
 import { useMe } from "@/features/auth/hooks"
 import { cn } from "@/lib/utils"
 
@@ -27,17 +18,18 @@ const isApp = (p: string) =>
 const isMarketing = (p: string) =>
   p === "/" || MARKETING.some((m) => p === m || p.startsWith(`${m}/`))
 
-const describe = (path: string): { label: string; icon: LucideIcon } => {
-  if (path.startsWith("/properties")) return { label: "Explore", icon: Search }
+const describe = (path: string): { label: string; icon: I8Name } => {
+  if (path.startsWith("/properties"))
+    return { label: "Explore", icon: "search" }
   if (path.startsWith("/account/deals"))
-    return { label: "Deals", icon: Handshake }
+    return { label: "Deals", icon: "handshake" }
   if (path.startsWith("/account/viewings"))
-    return { label: "Viewings", icon: CalendarCheck }
+    return { label: "Viewings", icon: "calendar" }
   if (path.startsWith("/account/messages"))
-    return { label: "Chats", icon: MessageSquare }
+    return { label: "Chats", icon: "speech-bubble" }
   if (path.startsWith("/lister"))
-    return { label: "Lister area", icon: Building2 }
-  return { label: "Profile", icon: UserRound }
+    return { label: "Lister area", icon: "building" }
+  return { label: "Profile", icon: "user" }
 }
 
 const noopSubscribe = () => () => {}
@@ -82,7 +74,7 @@ export function ReturnToApp() {
   }, [pathname])
 
   if (!me || !isMarketing(pathname)) return null
-  const { label, icon: Icon } = describe(target)
+  const { label, icon } = describe(target)
 
   return (
     <nav
@@ -108,13 +100,27 @@ export function ReturnToApp() {
           <span className="absolute inset-0 rounded-full bg-primary/40 [animation-duration:2.6s] motion-safe:animate-ping" />
           <span className="relative grid place-items-center">
             {compact ? (
-              <Icon className="size-5" aria-hidden />
+              <I8Icon
+                name={icon}
+                filled
+                className="size-[22px] animate-in duration-300 zoom-in-50"
+              />
             ) : (
-              <ArrowLeft
+              <I8Icon
+                name="back"
+                filled
                 className="size-5 motion-safe:animate-[nudge_1.6s_ease-in-out_infinite]"
-                aria-hidden
               />
             )}
+          </span>
+          {/* In the folded state a small return badge says where the button goes. */}
+          <span
+            className={cn(
+              "absolute -top-1 -left-1 grid size-5 place-items-center rounded-full bg-background text-primary shadow ring-1 ring-foreground/10 transition-[scale,opacity] duration-300",
+              compact ? "scale-100 opacity-100" : "scale-50 opacity-0"
+            )}
+          >
+            <I8Icon name="back" filled className="size-3" />
           </span>
         </span>
         <span

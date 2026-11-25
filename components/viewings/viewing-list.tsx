@@ -126,6 +126,7 @@ export function ViewingList({
       ) : items.length === 0 ? (
         <ListerEmpty
           icon={CalendarDays}
+          art="viewings"
           title={emptyTitle}
           hint={emptyHint}
           action={

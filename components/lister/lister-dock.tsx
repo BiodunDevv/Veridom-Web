@@ -1,14 +1,15 @@
 "use client"
 
-import Link from "next/link"
 import * as React from "react"
-import { ArrowLeftRight, LogOut } from "lucide-react"
 
+import { type I8Name } from "@/components/ui/i8-icon"
 import { ListerSwitcherDrawer } from "@/components/lister/lister-switcher"
 import { navFor } from "@/components/lister/lister-nav"
-import { ThemeToggleButton } from "@/components/theme-toggle"
 import {
   DockTile,
+  type DockArt,
+  type DockWash,
+  ThemeTile,
   MobileDock,
   type DockItem,
 } from "@/components/site/mobile-dock"
@@ -17,6 +18,31 @@ import { useChatUnread } from "@/features/chat/hooks"
 import { usePermissions, useSwitchOrg } from "@/features/lister/org-hooks"
 
 /** Phone tab bar for the lister area, built from what the role may use. */
+/** Full-colour tiles for the pages that live under "More". */
+const LISTER_ART: Record<string, { art: DockArt; wash: DockWash }> = {
+  "/lister": { art: "real-estate", wash: "rose" },
+  "/lister/listings": { art: "real-estate", wash: "rose" },
+  "/lister/role": { art: "security-shield-green", wash: "emerald" },
+  "/lister/team": { art: "conference-call", wash: "blue" },
+  "/lister/payouts": { art: "money-bag", wash: "green" },
+  "/lister/audit": { art: "time-machine", wash: "amber" },
+  "/lister/settings": { art: "settings", wash: "slate" },
+}
+
+/** Icons8 icons for the lister tabs, by route. */
+const LISTER_I8: Record<string, I8Name> = {
+  "/lister": "grid-2",
+  "/lister/listings": "building",
+  "/lister/viewings": "calendar",
+  "/lister/inquiries": "speech-bubble",
+  "/lister/deals": "handshake",
+  "/lister/role": "shield",
+  "/lister/team": "conference-call",
+  "/lister/payouts": "money-bag",
+  "/lister/audit": "activity-history",
+  "/lister/settings": "settings",
+}
+
 export function ListerDock() {
   const { can } = usePermissions()
   const router = useRouter()
@@ -46,6 +72,7 @@ export function ListerDock() {
       .replace("Messages", "Chats"),
     badge: item.path === "/lister/inquiries" ? unreadChats : undefined,
     href: item.path,
+    i8: LISTER_I8[item.path],
     iconNode: item.icon,
     match: (p) =>
       item.prefix
@@ -61,33 +88,26 @@ export function ListerDock() {
         more={
           <div className="grid grid-cols-3 gap-2">
             {rest.map((item) => (
-              <Link
+              <DockTile
                 key={item.path}
+                {...(LISTER_ART[item.path] ?? LISTER_ART["/lister"])}
+                label={item.title}
                 href={item.path}
-                className="flex flex-col items-center gap-1.5 rounded-2xl bg-foreground/[0.04] px-2 py-3 text-center transition-transform outline-none active:scale-95"
-              >
-                <span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary [&_svg]:size-5">
-                  {item.icon}
-                </span>
-                <span className="text-[12px] leading-tight font-semibold">
-                  {item.title}
-                </span>
-              </Link>
+              />
             ))}
             <DockTile
-              icon={ArrowLeftRight}
+              art="synchronize"
+              wash="amber"
               label="Switch lister"
               onClick={() => setSwitching(true)}
             />
             <DockTile
-              icon={LogOut}
+              art="logout-rounded-left"
+              wash="sky"
               label="Leave lister area"
               onClick={() => leave.mutate(null)}
             />
-            <div className="flex flex-col items-center justify-center gap-1.5 rounded-2xl bg-foreground/[0.04] px-2 py-3">
-              <ThemeToggleButton className="size-10" />
-              <span className="text-[12px] font-semibold">Theme</span>
-            </div>
+            <ThemeTile />
           </div>
         }
       />

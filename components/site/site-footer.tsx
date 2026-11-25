@@ -193,6 +193,14 @@ export function SiteFooter() {
             <Link href="/privacy" className="hover:text-primary">
               Privacy
             </Link>
+            <a
+              href="https://icons8.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-primary"
+            >
+              Icons &amp; illustrations by Icons8
+            </a>
           </div>
           <div className="flex gap-2">
             {socials.map((social) => (

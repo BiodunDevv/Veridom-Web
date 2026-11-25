@@ -1,0 +1,142 @@
+{
+  "version": 2,
+  "icons": {
+    "note": "Recorded by hand; not written by the icons8 skill. Tab bars use Icons8 iOS line icons in public/icons/i8/ (components/ui/i8-icon.tsx); More sheets use Icons8 Fluency colour icons in public/icons/fluency/."
+  },
+  "illustrations": {
+    "style": "3d-casual-life",
+    "format": "png-standard",
+    "notes": "Account is on the free Icons8 plan: standard PNG (456px long side) is the shippable format, no SVG/HD. Rendered at 96-160px, so 456px covers 2x screens. All picks are single objects in the muted sage/teal + white palette with yellow accents. Credit: 'Icons & illustrations by Icons8' in the site footer and on offline.html.",
+    "slots": {
+      "empty-viewings": {
+        "id": "69de68618246c825d40b3236",
+        "heading": "Calendar",
+        "file": "public/illustrations/empty-viewings.png",
+        "width": 456,
+        "height": 456,
+        "free_distribution": false
+      },
+      "empty-chats": {
+        "id": "6538810096c2840001e79b9e",
+        "heading": "speech bubbles",
+        "file": "public/illustrations/empty-chats.png",
+        "width": 456,
+        "height": 398,
+        "free_distribution": false
+      },
+      "empty-deals": {
+        "id": "67b563798d6ed70001f12c6a",
+        "heading": "bundle of keys",
+        "file": "public/illustrations/empty-deals.png",
+        "width": 456,
+        "height": 386,
+        "free_distribution": false
+      },
+      "empty-lister-deals": {
+        "id": "639765e2329f260001fd6e2b",
+        "heading": "signing contract",
+        "file": "public/illustrations/empty-lister-deals.png",
+        "width": 456,
+        "height": 402,
+        "free_distribution": false
+      },
+      "empty-search": {
+        "id": "69de7b1d8246c825d40b338a",
+        "heading": "Green binoculars",
+        "file": "public/illustrations/empty-search.png",
+        "width": 456,
+        "height": 456,
+        "free_distribution": false
+      },
+      "empty-listings": {
+        "id": "645a2f7f386f8e000136e66b",
+        "heading": "house",
+        "file": "public/illustrations/empty-listings.png",
+        "width": 456,
+        "height": 293,
+        "free_distribution": false
+      },
+      "empty-lister-listings": {
+        "id": "651c272bd5a38900011582be",
+        "heading": "blue clipboard",
+        "file": "public/illustrations/empty-lister-listings-clipboard.png",
+        "width": 373,
+        "height": 456,
+        "free_distribution": false
+      },
+      "empty-notifications": {
+        "id": "63dea9ef25002f0001afc97a",
+        "heading": "bell straight",
+        "file": "public/illustrations/empty-notifications.png",
+        "width": 432,
+        "height": 456,
+        "free_distribution": false
+      },
+      "payment-held": {
+        "id": "6759f880b2730500015b8288",
+        "heading": "safe with protective shield",
+        "file": "public/illustrations/payment-held.png",
+        "width": 456,
+        "height": 321,
+        "free_distribution": false
+      },
+      "listing-in-review": {
+        "id": "6759f8a9b2730500015b82a2",
+        "heading": "document with clock icon",
+        "file": "public/illustrations/listing-in-review.png",
+        "width": 374,
+        "height": 456,
+        "free_distribution": false
+      },
+      "offline": {
+        "id": "62e422ae1aed48000110e19f",
+        "heading": "wifi",
+        "file": "public/illustrations/offline.png",
+        "width": 456,
+        "height": 318,
+        "free_distribution": false
+      },
+      "not-found": {
+        "id": "63d6332ccd3de40001fe33b4",
+        "heading": "trail map",
+        "file": "public/illustrations/not-found-map.png",
+        "width": 900,
+        "height": 429,
+        "free_distribution": false,
+        "note": "Animated in the catalogue, but webm/mp4 need a paid plan; ships the clean 1200px poster still (cropped, resized to 900px) with CSS float + pulse in not-found-view.tsx."
+      },
+      "deal-pay": {
+        "id": "634c4d5bf40a4d0001c37f31",
+        "heading": "phone and credit card",
+        "file": "public/illustrations/deal-pay.png",
+        "width": 456,
+        "height": 448,
+        "free_distribution": false
+      },
+      "deal-move-in": {
+        "id": "69de73808246c825d40b32fe",
+        "heading": "Blue door with steps",
+        "file": "public/illustrations/deal-move-in.png",
+        "width": 456,
+        "height": 456,
+        "free_distribution": false
+      },
+      "deal-renewal": {
+        "id": "64ccee6a7642fb00014870a0",
+        "heading": "contract checkmark button",
+        "file": "public/illustrations/deal-renewal.png",
+        "width": 456,
+        "height": 430,
+        "free_distribution": false
+      },
+      "logout-confirm": {
+        "id": "69de77058246c825d40b334a",
+        "heading": "Yellow padlock with key",
+        "file": "public/illustrations/logout.png",
+        "width": 456,
+        "height": 456,
+        "free_distribution": false
+      }
+    }
+  }
+}

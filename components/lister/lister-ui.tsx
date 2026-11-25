@@ -3,6 +3,10 @@
 import * as React from "react"
 import { Loader2, type LucideIcon } from "lucide-react"
 
+import {
+  Illustration,
+  type IllustrationName,
+} from "@/components/ui/illustration"
 import { PatternBg } from "@/components/ui/pattern-bg"
 import { RowsSkeleton } from "@/components/ui/page-skeletons"
 import { cn } from "@/lib/utils"
@@ -33,6 +37,52 @@ export type HeroStat = {
   hint?: string
   icon?: LucideIcon
   tone?: "default" | "good" | "warn"
+}
+
+/**
+ * The page's numbers as one quiet row, the way mobile apps show a summary:
+ * value over label, hairline dividers, no boxes. Scrolls sideways if it runs
+ * out of room on a small phone.
+ */
+function StatStrip({
+  stats,
+  loading,
+}: {
+  stats: HeroStat[]
+  loading?: boolean
+}) {
+  return (
+    <dl className="-mx-1 flex overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {stats.map((stat) => (
+        <div
+          key={stat.label}
+          className="flex flex-1 shrink-0 flex-col-reverse gap-0.5 border-l px-2.5 whitespace-nowrap first:border-l-0 first:pl-1 sm:px-4"
+        >
+          <dt className="flex items-center gap-1 text-[11px] text-muted-foreground sm:gap-1.5 sm:text-xs">
+            {stat.tone === "warn" || stat.tone === "good" ? (
+              <span
+                aria-hidden
+                className={cn(
+                  "size-1.5 shrink-0 rounded-full",
+                  stat.tone === "warn" ? "bg-amber-500" : "bg-primary"
+                )}
+              />
+            ) : null}
+            <span>{stat.label}</span>
+          </dt>
+          <dd className="text-lg leading-tight font-semibold tracking-tight tabular-nums sm:text-xl">
+            {loading ? (
+              <span className="inline-block h-5 w-8 animate-pulse rounded bg-muted align-middle" />
+            ) : typeof stat.value === "number" ? (
+              <CountUp value={stat.value} />
+            ) : (
+              stat.value
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  )
 }
 
 /**
@@ -91,58 +141,9 @@ export function ListerHero({
         </div>
 
         {stats?.length ? (
-          <dl className="grid grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
-            {stats.map((stat, i) => (
-              <div
-                key={stat.label}
-                style={{ animationDelay: `${i * 60}ms` }}
-                className="flex animate-in items-center gap-2.5 rounded-xl border bg-background/70 p-2.5 backdrop-blur-sm fade-in slide-in-from-bottom-1 sm:flex-col sm:items-stretch sm:gap-1 sm:p-3.5"
-              >
-                {stat.icon ? (
-                  <span
-                    className={cn(
-                      "grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground sm:hidden",
-                      stat.tone === "good" && "bg-primary/10 text-primary",
-                      stat.tone === "warn" &&
-                        "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                    )}
-                  >
-                    <stat.icon className="size-4" aria-hidden />
-                  </span>
-                ) : null}
-                <div className="flex min-w-0 flex-col-reverse sm:flex-col sm:gap-1">
-                  <dt className="flex items-center gap-1.5 truncate text-[11px] font-medium text-muted-foreground sm:text-xs">
-                    {stat.icon ? (
-                      <stat.icon
-                        className={cn(
-                          "hidden size-3.5 sm:block",
-                          stat.tone === "good" && "text-primary",
-                          stat.tone === "warn" &&
-                            "text-amber-600 dark:text-amber-400"
-                        )}
-                        aria-hidden
-                      />
-                    ) : null}
-                    <span className="truncate">{stat.label}</span>
-                  </dt>
-                  <dd className="truncate text-lg leading-tight font-semibold tracking-tight tabular-nums sm:text-xl">
-                    {loading ? (
-                      <span className="inline-block h-5 w-8 animate-pulse rounded bg-muted" />
-                    ) : typeof stat.value === "number" ? (
-                      <CountUp value={stat.value} />
-                    ) : (
-                      stat.value
-                    )}
-                  </dd>
-                </div>
-                {stat.hint ? (
-                  <span className="hidden truncate text-xs text-muted-foreground sm:block">
-                    {stat.hint}
-                  </span>
-                ) : null}
-              </div>
-            ))}
-          </dl>
+          <div className="border-t pt-3 sm:pt-4">
+            <StatStrip stats={stats} loading={loading} />
+          </div>
         ) : null}
       </div>
     </header>
@@ -152,21 +153,32 @@ export function ListerHero({
 /** A friendly empty state with the pattern behind it. */
 export function ListerEmpty({
   icon: Icon,
+  art,
   title,
   hint,
   action,
 }: {
   icon: LucideIcon
+  /** A product illustration shown instead of the icon. */
+  art?: IllustrationName
   title: string
   hint?: string
   action?: React.ReactNode
 }) {
   return (
-    <div className="relative isolate flex flex-col items-center gap-3 overflow-hidden rounded-2xl bg-card px-6 py-14 text-center shadow-md">
-      <PatternBg className="-z-10 [mask-image:radial-gradient(60%_80%_at_50%_50%,black,transparent)] opacity-20 dark:opacity-40" />
-      <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/15">
-        <Icon className="size-5" aria-hidden />
-      </span>
+    <div
+      className={cn(
+        "relative isolate flex flex-col items-center gap-3 overflow-hidden rounded-2xl bg-card px-6 text-center shadow-md",
+        art ? "py-8 sm:py-10" : "py-14"
+      )}
+    >
+      {art ? (
+        <Illustration name={art} className="mb-1" />
+      ) : (
+        <span className="grid size-12 place-items-center rounded-full bg-primary/10 text-primary ring-1 ring-primary/15">
+          <Icon className="size-5" aria-hidden />
+        </span>
+      )}
       <p className="text-lg font-semibold">{title}</p>
       {hint ? (
         <p className="max-w-sm text-sm text-muted-foreground">{hint}</p>

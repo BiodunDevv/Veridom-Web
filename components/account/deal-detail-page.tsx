@@ -21,6 +21,10 @@ import { useConfirm } from "@/components/lister/confirm-dialog"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
 import {
+  Illustration,
+  type IllustrationName,
+} from "@/components/ui/illustration"
+import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
@@ -44,14 +48,6 @@ import { cn } from "@/lib/utils"
 const HOLD_MS = 30 * 60_000
 const DAY_MS = 86_400_000
 
-/** Unsplash photos that suit each stage of a deal. */
-const photo = (id: string, width = 900) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=70`
-const IMAGES = {
-  pay: "photo-1556742049-0cfed4f6a45d", // paying with a phone at a counter
-  keys: "photo-1560518883-ce09059eeffa", // keys beside a model home
-  papers: "photo-1450101499163-c8848c66ca85", // signing papers
-}
 const STEPS = ["Reserved", "Paid", "Move-in", "Done"]
 const ENDED: Record<string, string> = {
   EXPIRED: "The hold ended before payment was made.",
@@ -69,23 +65,17 @@ const CHANNELS: Record<string, string> = {
   mobile_money: "mobile money",
 }
 
-/** A neat rounded picture at the top of a card, with a small caption. */
-function Photo({ id, caption }: { id: string; caption?: string }) {
-  const [failed, setFailed] = React.useState(false)
-  if (failed) return null
+/** A soft tinted banner at the top of a card with the stage's illustration. */
+function Banner({ art, caption }: { art: IllustrationName; caption?: string }) {
   return (
-    <div className="relative h-32 overflow-hidden rounded-xl bg-muted sm:h-40">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={photo(id)}
-        alt=""
-        loading="lazy"
-        onError={() => setFailed(true)}
-        className="size-full object-cover"
+    <div className="relative isolate flex h-36 items-center justify-center overflow-hidden rounded-xl bg-primary/[0.06] ring-1 ring-primary/10 sm:h-40 dark:bg-primary/[0.08]">
+      <span
+        aria-hidden
+        className="absolute top-1/2 left-1/2 -z-10 size-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-2xl"
       />
-      <span className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+      <Illustration name={art} size="sm" className="h-28 sm:h-32" />
       {caption ? (
-        <span className="absolute bottom-2.5 left-2.5 rounded-full bg-background/85 px-2.5 py-1 text-xs font-semibold backdrop-blur">
+        <span className="absolute top-2.5 left-2.5 rounded-full bg-background/90 px-2.5 py-1 text-xs font-semibold shadow-xs">
           {caption}
         </span>
       ) : null}
@@ -95,19 +85,19 @@ function Photo({ id, caption }: { id: string; caption?: string }) {
 
 function Card({
   title,
-  image,
+  art,
   caption,
   children,
 }: {
   title?: string
-  /** An Unsplash photo id shown at the top of the card. */
-  image?: string
+  /** An illustration banner shown at the top of the card. */
+  art?: IllustrationName
   caption?: string
   children: React.ReactNode
 }) {
   return (
     <section className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border sm:p-5">
-      {image ? <Photo id={image} caption={caption} /> : null}
+      {art ? <Banner art={art} caption={caption} /> : null}
       <div className="flex flex-col gap-4 sm:px-1">
         {title ? (
           <h2 className="text-base font-semibold sm:text-lg">{title}</h2>
@@ -181,11 +171,7 @@ function PayCard({ deal }: { deal: Deal }) {
   const pct = Math.min(100, Math.max(0, ((left * 1000) / HOLD_MS) * 100))
 
   return (
-    <Card
-      title="Complete your payment"
-      image={IMAGES.pay}
-      caption="Secure payment"
-    >
+    <Card title="Complete your payment" art="dealPay" caption="Secure payment">
       <div className="flex flex-col gap-2">
         <p className="flex items-baseline justify-between text-sm text-muted-foreground">
           {left > 0 ? "Held for you" : "The hold is ending"}
@@ -247,7 +233,7 @@ function MoveInCard({ deal }: { deal: Deal }) {
   return (
     <Card
       title="Move-in handover"
-      image={IMAGES.keys}
+      art="dealMoveIn"
       caption="Keys on move-in day"
     >
       <div className="flex flex-col gap-3 rounded-xl bg-muted/50 p-4">
@@ -421,7 +407,7 @@ export function DealDetailPage({ id }: { id: string }) {
             </Card>
           ) : null}
           {status === "COMPLETED" ? (
-            <Card title="Staying on?" image={IMAGES.papers} caption="Renewal">
+            <Card title="Staying on?" art="dealRenewal" caption="Renewal">
               <p className="text-sm text-muted-foreground">
                 Renew to pay the next rent and recurring fees.
               </p>

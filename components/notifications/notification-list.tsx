@@ -3,11 +3,12 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { BellOff, CheckCheck, Loader2, Settings2 } from "lucide-react"
+import { CheckCheck, Loader2, Settings2 } from "lucide-react"
 
 import { timeAgo } from "@/components/lister/lister-ui"
 import { metaFor, safeLink } from "@/components/notifications/notification-meta"
 import { Button } from "@/components/ui/button"
+import { Illustration } from "@/components/ui/illustration"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   useMarkRead,
@@ -170,10 +171,8 @@ export function NotificationList({
             ))}
           </ul>
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 px-6 py-12 text-center">
-            <span className="grid size-12 place-items-center rounded-full bg-muted text-muted-foreground">
-              <BellOff className="size-5" aria-hidden />
-            </span>
+          <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
+            <Illustration name="notifications" size="sm" className="mb-1" />
             <p className="font-semibold">
               {unreadOnly ? "You're all caught up" : "Nothing yet"}
             </p>

@@ -396,6 +396,7 @@ export function ListerListingsPage() {
       ) : visible.length === 0 ? (
         <ListerEmpty
           icon={Building2}
+          art={term || status ? "search" : "listerListings"}
           title={term || status ? "Nothing in this view" : "Nothing here yet"}
           hint={
             term || status

@@ -1,15 +1,22 @@
+/* eslint-disable @next/next/no-img-element */
 "use client"
 
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Ellipsis, X, type LucideIcon } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
+import { useTheme } from "next-themes"
+
+import { useThemeToggle } from "@/components/theme-toggle"
+import { I8Icon, type I8Name } from "@/components/ui/i8-icon"
 import { cn } from "@/lib/utils"
 
 export type DockItem = {
   label: string
   icon?: LucideIcon
+  /** Icons8 line icon; the filled twin shows while the tab is active. */
+  i8?: I8Name
   /** Use instead of `icon` when you already have an element. */
   iconNode?: React.ReactNode
   href?: string
@@ -29,37 +36,104 @@ const isActive = (item: DockItem, pathname: string) =>
         : pathname === item.href || pathname.startsWith(`${item.href}/`)
       : false
 
+/** Full-colour Icons8 "Fluency" artwork, self-hosted in /public/icons/fluency. */
+export type DockArt =
+  | "appointment-reminders"
+  | "security-shield-green"
+  | "briefcase"
+  | "info"
+  | "mail"
+  | "moon-symbol"
+  | "sun"
+  | "shutdown"
+  | "change"
+  | "synchronize"
+  | "logout-rounded-left"
+  | "conference-call"
+  | "money-bag"
+  | "time-machine"
+  | "settings"
+  | "real-estate"
+
+/** Each tile gets a soft wash that matches its artwork. */
+const WASH: Record<string, string> = {
+  amber: "from-amber-400/20 to-amber-400/5 ring-amber-500/15",
+  emerald: "from-emerald-500/20 to-emerald-500/5 ring-emerald-500/15",
+  orange: "from-orange-500/20 to-orange-500/5 ring-orange-500/15",
+  sky: "from-sky-500/20 to-sky-500/5 ring-sky-500/15",
+  blue: "from-blue-500/20 to-blue-500/5 ring-blue-500/15",
+  violet: "from-indigo-500/20 to-indigo-500/5 ring-indigo-500/15",
+  rose: "from-rose-500/20 to-rose-500/5 ring-rose-500/15",
+  red: "from-red-500/20 to-red-500/5 ring-red-500/15",
+  slate: "from-slate-500/20 to-slate-500/5 ring-slate-500/15",
+  green: "from-primary/20 to-primary/5 ring-primary/15",
+  cyan: "from-cyan-500/20 to-cyan-500/5 ring-cyan-500/15",
+}
+
+export type DockWash = keyof typeof WASH
+
+export const dockTileClass = (wash?: DockWash) =>
+  cn(
+    "group relative flex flex-col items-center gap-2 rounded-2xl px-2 pt-3.5 pb-3 text-center ring-1 transition-[transform,background-color] outline-none ring-inset focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95",
+    wash
+      ? cn("bg-gradient-to-b", WASH[wash])
+      : "bg-foreground/[0.04] ring-transparent"
+  )
+
 /** A tile for the expanded "More" panel. */
 export function DockTile({
   icon: Icon,
+  art,
+  wash,
   label,
   href,
   onClick,
   tone,
+  badge,
 }: {
-  icon: LucideIcon
+  icon?: LucideIcon
+  art?: DockArt
+  wash?: DockWash
   label: string
   href?: string
   onClick?: () => void
   tone?: "danger"
+  badge?: number
 }) {
   const body = (
     <>
-      <span
-        className={cn(
-          "grid size-10 place-items-center rounded-xl",
-          tone === "danger"
-            ? "bg-destructive/10 text-destructive"
-            : "bg-primary/10 text-primary"
-        )}
-      >
-        <Icon className="size-5" />
-      </span>
+      {art ? (
+        <span className="relative grid size-11 place-items-center">
+          <img
+            src={`/icons/fluency/${art}.png`}
+            alt=""
+            width={40}
+            height={40}
+            loading="lazy"
+            className="size-10 drop-shadow-sm transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:scale-105"
+          />
+          {badge ? (
+            <span className="absolute -top-1 -right-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-background">
+              {badge > 99 ? "99+" : badge}
+            </span>
+          ) : null}
+        </span>
+      ) : Icon ? (
+        <span
+          className={cn(
+            "grid size-10 place-items-center rounded-xl",
+            tone === "danger"
+              ? "bg-destructive/10 text-destructive"
+              : "bg-primary/10 text-primary"
+          )}
+        >
+          <Icon className="size-5" />
+        </span>
+      ) : null}
       <span className="text-[12px] leading-tight font-semibold">{label}</span>
     </>
   )
-  const cls =
-    "flex flex-col items-center gap-1.5 rounded-2xl bg-foreground/[0.04] px-2 py-3 text-center transition-transform outline-none active:scale-95 focus-visible:ring-3 focus-visible:ring-ring/50"
+  const cls = dockTileClass(wash)
 
   return href ? (
     <Link href={href} className={cls}>
@@ -69,6 +143,21 @@ export function DockTile({
     <button type="button" onClick={onClick} className={cls}>
       {body}
     </button>
+  )
+}
+
+/** Theme switch as a tile: shows the moon in light mode and the sun in dark. */
+export function ThemeTile() {
+  const { resolvedTheme } = useTheme()
+  const toggle = useThemeToggle()
+  const dark = resolvedTheme === "dark"
+  return (
+    <DockTile
+      art={dark ? "sun" : "moon-symbol"}
+      wash={dark ? "amber" : "violet"}
+      label={dark ? "Light mode" : "Dark mode"}
+      onClick={toggle}
+    />
   )
 }
 
@@ -213,10 +302,18 @@ export function MobileDock({
                         )}
                       >
                         <span className="relative grid place-items-center">
-                          {item.iconNode ??
+                          {item.i8 ? (
+                            <I8Icon
+                              name={item.i8}
+                              filled={active}
+                              className="size-[21px]"
+                            />
+                          ) : (
+                            (item.iconNode ??
                             (item.icon ? (
                               <item.icon className="size-[19px]" />
-                            ) : null)}
+                            ) : null))
+                          )}
                           {item.badge ? (
                             <span
                               aria-label={`${item.badge} unread`}
@@ -292,9 +389,9 @@ export function MobileDock({
                         )}
                       >
                         {open ? (
-                          <X className="size-[19px]" />
+                          <I8Icon name="multiply" className="size-[19px]" />
                         ) : (
-                          <Ellipsis className="size-[19px]" />
+                          <I8Icon name="ellipsis" className="size-[21px]" />
                         )}
                       </span>
                       <span

@@ -93,6 +93,7 @@ export function ListerDealsPage() {
       ) : items.length === 0 ? (
         <ListerEmpty
           icon={Handshake}
+          art="listerDeals"
           title="No deals yet"
           hint="When a customer reserves one of your listings, the deal shows up here with its payment status."
         />

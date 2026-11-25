@@ -3,7 +3,6 @@
 import * as React from "react"
 import { CheckCircle2, Circle, Sparkles } from "lucide-react"
 
-import { PatternBg } from "@/components/ui/pattern-bg"
 import { cn } from "@/lib/utils"
 
 export type ReadinessItem = {
@@ -27,7 +26,6 @@ export function ListingReadiness({ items }: { items: ReadinessItem[] }) {
       aria-labelledby="ready-title"
       className="relative isolate overflow-hidden rounded-2xl bg-card p-5 shadow-md"
     >
-      <PatternBg className="-z-10 [mask-image:linear-gradient(to_bottom,black,transparent_55%)] opacity-20 dark:opacity-40" />
       <div className="flex items-center gap-4">
         <div className="relative grid size-16 shrink-0 place-items-center">
           <svg viewBox="0 0 64 64" className="size-16 -rotate-90" aria-hidden>

@@ -39,6 +39,10 @@ import { ViewingTimesCard } from "@/components/lister/viewing-times-card"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
 import {
+  Illustration,
+  type IllustrationName,
+} from "@/components/ui/illustration"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -94,11 +98,14 @@ const noticeTone = {
 function Notice({
   tone,
   icon: Icon,
+  art,
   title,
   children,
 }: {
   tone: keyof typeof noticeTone
   icon: React.ComponentType<{ className?: string }>
+  /** A small illustration on the right, for moments worth marking. */
+  art?: IllustrationName
   title: string
   children: React.ReactNode
 }) {
@@ -108,10 +115,16 @@ function Notice({
       className={`flex items-start gap-3 rounded-xl border p-4 text-sm ${noticeTone[tone]}`}
     >
       <Icon className="mt-0.5 size-4 shrink-0" />
-      <p>
+      <p className="min-w-0 flex-1">
         <span className="font-semibold">{title}. </span>
         {children}
       </p>
+      {art ? (
+        <Illustration
+          name={art}
+          className="-my-1 h-14 w-auto shrink-0 sm:h-16"
+        />
+      ) : null}
     </div>
   )
 }
@@ -349,7 +362,7 @@ function EditListing({ listing }: { listing: ListerListing }) {
         </Notice>
       ) : null}
       {listing.status === "PENDING_REVIEW" ? (
-        <Notice tone="warn" icon={Clock3} title="In review">
+        <Notice tone="warn" icon={Clock3} art="inReview" title="In review">
           You can edit again once the team has decided.
         </Notice>
       ) : null}

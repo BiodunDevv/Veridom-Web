@@ -21,7 +21,8 @@ import {
 import { ProfileDock } from "@/components/account/profile-dock"
 import { SiteHeader } from "@/components/site/site-header"
 import { Button } from "@/components/ui/button"
-import { useLogout, useMe } from "@/features/auth/hooks"
+import { useLogoutConfirm } from "@/components/account/logout-dialog"
+import { useMe } from "@/features/auth/hooks"
 import { useMine } from "@/features/lister/org-hooks"
 import { initialsOf } from "@/lib/initials"
 import { cn } from "@/lib/utils"
@@ -122,7 +123,7 @@ function MobileBackBar({ pathname }: { pathname: string }) {
 export function ProfileLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const me = useMe().data
-  const logout = useLogout()
+  const logout = useLogoutConfirm()
   const mine = useMine().data
   const hasLister = Boolean(mine?.organizations.length)
   const visibleGroups = groups.filter(
@@ -182,8 +183,8 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
               <Button
                 variant="outline"
                 className="w-full"
-                disabled={logout.isPending}
-                onClick={() => logout.mutate()}
+                disabled={logout.pending}
+                onClick={logout.ask}
               >
                 <LogOut /> Log out
               </Button>
@@ -197,6 +198,7 @@ export function ProfileLayout({ children }: { children: React.ReactNode }) {
         </div>
       </main>
       <ProfileDock />
+      {logout.dialog}
     </div>
   )
 }

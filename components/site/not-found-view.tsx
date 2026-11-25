@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Compass, Home, MapPin, Search } from "lucide-react"
@@ -21,105 +22,45 @@ const QUICK_LINKS = [
   { href: "/contact", label: "Contact us" },
 ]
 
-/** A map that lost its destination: the route runs out before the pin. */
+/**
+ * Icons8 "trail map" (3D Casual life): a route through the city that ends at
+ * a question mark. The map drifts gently and a ring pulses under the "?" pin;
+ * both stop for people who ask for reduced motion.
+ */
 function LostMap() {
   return (
-    <svg
-      viewBox="0 0 420 300"
-      role="img"
-      aria-label="A route that stops before reaching its destination"
-      className="h-auto w-full max-w-[420px]"
-    >
-      <defs>
-        <pattern
-          id="nf-grid"
-          width="28"
-          height="28"
-          patternUnits="userSpaceOnUse"
+    <div className="relative mx-auto w-full max-w-[480px]">
+      <div className="relative motion-safe:animate-float">
+        <Image
+          src="/illustrations/not-found-map.png"
+          width={900}
+          height={429}
+          priority
+          sizes="(min-width: 1024px) 480px, 92vw"
+          alt="A city map with a route that ends at a question mark"
+          className="h-auto w-full drop-shadow-[0_18px_24px_rgb(0_0_0/0.12)] dark:drop-shadow-[0_18px_28px_rgb(0_0_0/0.45)]"
+        />
+        {/* where the address should have been */}
+        <span
+          aria-hidden
+          className="absolute top-[53%] left-[18.8%] -translate-x-1/2 -translate-y-1/2"
         >
-          <path
-            d="M28 0H0V28"
-            fill="none"
-            stroke="currentColor"
-            strokeOpacity="0.12"
-          />
-        </pattern>
-        <radialGradient id="nf-fade" cx="50%" cy="50%" r="60%">
-          <stop offset="55%" stopColor="white" />
-          <stop offset="100%" stopColor="black" />
-        </radialGradient>
-        <mask id="nf-mask">
-          <rect width="420" height="300" fill="url(#nf-fade)" />
-        </mask>
-      </defs>
-
-      <g mask="url(#nf-mask)" className="text-foreground">
-        <rect width="420" height="300" fill="url(#nf-grid)" />
-        <path
-          d="M0 210C70 190 110 240 190 215S320 150 420 170"
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity="0.1"
-          strokeWidth="14"
-        />
-        <path
-          d="M90 0C100 80 70 130 120 300"
-          fill="none"
-          stroke="currentColor"
-          strokeOpacity="0.08"
-          strokeWidth="10"
-        />
-      </g>
-
-      {/* the route that never arrives */}
-      <path
-        d="M56 244C96 226 118 196 154 190S226 196 254 160"
-        fill="none"
-        className="animate-draw stroke-primary"
-        strokeWidth="3"
-        strokeLinecap="round"
-        pathLength={1}
-        style={{ strokeDasharray: "1", strokeDashoffset: 1 }}
+          <span className="block h-3 w-7 rounded-[50%] bg-pink-400/60 motion-safe:animate-ping" />
+        </span>
+        {/* the destination the route never reaches */}
+        <span
+          aria-hidden
+          className="absolute top-[28%] left-[75.2%] -translate-x-1/2 -translate-y-1/2"
+        >
+          <span className="block h-2.5 w-6 rounded-[50%] bg-sky-400/50 [animation-delay:1.2s] motion-safe:animate-ping" />
+        </span>
+      </div>
+      {/* ground shadow, so the floating map has something to float over */}
+      <div
+        aria-hidden
+        className="mx-auto -mt-2 h-4 w-3/5 rounded-[50%] bg-foreground/10 blur-md dark:bg-black/50"
       />
-      <circle cx="56" cy="244" r="6" className="fill-primary" />
-      <circle cx="56" cy="244" r="12" className="fill-primary/20" />
-
-      {/* question mark where the road ends */}
-      <g className="animate-twinkle" style={{ transformOrigin: "266px 146px" }}>
-        <circle
-          cx="266"
-          cy="146"
-          r="15"
-          className="fill-background stroke-primary/50"
-          strokeDasharray="3 4"
-        />
-        <text
-          x="266"
-          y="152"
-          textAnchor="middle"
-          className="fill-primary text-[16px] font-semibold"
-        >
-          ?
-        </text>
-      </g>
-
-      {/* the missing pin floats off to the side */}
-      <g className="animate-float">
-        <ellipse
-          cx="338"
-          cy="104"
-          rx="14"
-          ry="4"
-          className="fill-foreground/10"
-        />
-        <path
-          d="M338 62c-11 0-20 8.500-20 19 0 14 20 32 20 32s20-18 20-32c0-10.500-9-19-20-19Z"
-          className="fill-primary"
-          transform="translate(0 -24)"
-        />
-        <circle cx="338" cy="57" r="7" className="fill-primary-foreground" />
-      </g>
-    </svg>
+    </div>
   )
 }
 
@@ -229,9 +170,7 @@ export function NotFoundView() {
 
         <div className="relative flex justify-center">
           <div className="absolute inset-6 -z-10 rounded-full bg-primary/10 blur-3xl" />
-          <div className="w-full max-w-[460px] rounded-3xl border bg-card/60 p-4 shadow-sm backdrop-blur">
-            <LostMap />
-          </div>
+          <LostMap />
         </div>
       </div>
     </section>

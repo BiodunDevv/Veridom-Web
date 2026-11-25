@@ -46,6 +46,28 @@ export function useSwitchOrg(onDone?: (id: string | null) => void) {
     (id: string | null) => organizationsApi.setActive(id).then(() => id),
     {
       onSuccess: async (id) => {
+        if (id === null) {
+          // Leaving the lister area. The lister pages are still on screen for
+          // a moment, and refetching their data now (listings, photos, deals)
+          // would only earn a 403 per query: there is no active lister any
+          // more. Stop what is in flight, mark it stale without refetching,
+          // and go. It loads fresh next time a lister is chosen.
+          await queryClient.cancelQueries({ queryKey: ["lister"] })
+          await queryClient.invalidateQueries({
+            queryKey: ["lister"],
+            refetchType: "none",
+          })
+          // Team, roles, invites and audit need an active lister too.
+          await queryClient.cancelQueries({ queryKey: ["org"] })
+          await queryClient.invalidateQueries({
+            queryKey: ["org"],
+            refetchType: "none",
+          })
+          onDone?.(id)
+          // Only "which listers am I in" is still meaningful on the account page.
+          await queryClient.invalidateQueries({ queryKey: queryKeys.org.mine })
+          return
+        }
         await queryClient.invalidateQueries({ queryKey: ["org"] })
         await queryClient.invalidateQueries({ queryKey: ["lister"] })
         onDone?.(id)

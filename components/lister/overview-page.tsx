@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   BadgeDollarSign,
   Building2,
-  CalendarCheck,
   CircleCheck,
   Clock3,
   Handshake,
@@ -16,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { PatternBg } from "@/components/ui/pattern-bg"
+import { MetricLink, MetricRow } from "@/components/account/app-list"
 import { StatusBadge } from "@/components/account/status-badge"
 import { Button } from "@/components/ui/button"
 import { useMe } from "@/features/auth/hooks"
@@ -27,7 +27,6 @@ import {
 } from "@/features/lister/ops-hooks"
 import { formatNaira } from "@/lib/format"
 import { PERMISSION_GROUPS, PERMISSION_LABELS } from "@/lib/permissions"
-import { cn } from "@/lib/utils"
 
 const greeting = () => {
   const hour = new Date().getHours()
@@ -46,52 +45,6 @@ const initialsOfName = (name: string) =>
     .map((w) => w[0])
     .join("")
     .toUpperCase() || "L"
-
-function Stat({
-  href,
-  icon: Icon,
-  label,
-  value,
-  hint,
-  featured,
-}: {
-  href: string
-  icon: LucideIcon
-  label: string
-  value: string
-  hint: string
-  featured?: boolean
-}) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "group relative flex flex-col gap-3 overflow-hidden rounded-2xl p-4 shadow-md transition-[translate,box-shadow] hover:-translate-y-0.5 hover:shadow-xl sm:p-5",
-        featured ? "bg-panel text-panel-foreground" : "bg-card"
-      )}
-    >
-      {featured ? (
-        <PatternBg className="object-right opacity-25 mix-blend-soft-light" />
-      ) : null}
-      <div className="relative flex items-center justify-between">
-        <span
-          className={cn(
-            "grid size-9 place-items-center rounded-full",
-            featured ? "bg-panel-foreground/15" : "bg-primary/10 text-primary"
-          )}
-        >
-          <Icon className="size-[18px]" />
-        </span>
-        <ArrowUpRight className="size-4 opacity-60 transition-opacity group-hover:opacity-100" />
-      </div>
-      <div className="relative">
-        <p className="text-3xl font-semibold tracking-tight">{value}</p>
-        <p className="text-sm font-medium opacity-80">{label}</p>
-      </div>
-      <p className="relative text-xs opacity-70">{hint}</p>
-    </Link>
-  )
-}
 
 function Action({
   href,
@@ -159,78 +112,66 @@ export function ListerOverviewPage() {
 
   return (
     <>
-      <section className="relative overflow-hidden rounded-2xl bg-card p-5 shadow-md sm:p-6">
-        <PatternBg className="object-right opacity-25 dark:opacity-40" />
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground shadow-md">
-              {initialsOfName(name)}
-            </span>
-            <div className="flex min-w-0 flex-col gap-1">
-              <p className="text-sm text-muted-foreground">
-                {greeting()}
-                {me ? `, ${me.firstName}` : ""}
+      <section className="relative isolate overflow-hidden rounded-2xl bg-card shadow-sm ring-1 ring-border">
+        <PatternBg className="-z-10 opacity-60 dark:opacity-70" />
+        <div className="flex items-center gap-3.5 p-4 sm:p-5">
+          <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground shadow-sm">
+            {initialsOfName(name)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-xs text-muted-foreground">
+              {greeting()}
+              {me ? `, ${me.firstName}` : ""}
+            </p>
+            <h1 className="truncate text-lg leading-tight font-semibold tracking-tight sm:text-xl">
+              {name}
+            </h1>
+            {role ? (
+              <p className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+                <ShieldCheck className="size-3.5" aria-hidden /> {role.roleName}
               </p>
-              <h1 className="truncate text-2xl font-semibold tracking-tight">
-                {name}
-              </h1>
-              {role ? (
-                <span className="inline-flex items-center gap-1.5 self-start rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground">
-                  <ShieldCheck className="size-3.5" /> {role.roleName}
-                </span>
-              ) : null}
-            </div>
+            ) : null}
           </div>
           {can("listing:create") ? (
-            <Button asChild size="lg">
+            <Button asChild className="shrink-0">
               <Link href="/lister/listings/new">
-                <Plus /> New listing
+                <Plus /> <span className="hidden sm:inline">New listing</span>
+                <span className="sm:hidden">New</span>
               </Link>
             </Button>
           ) : null}
         </div>
+        {canList || canViewings || canDeals ? (
+          <MetricRow label="Lister summary">
+            {canList ? (
+              <MetricLink
+                href="/lister/listings"
+                label={
+                  inReview ? `Live · ${inReview} in review` : "Live listings"
+                }
+                value={published}
+                fresh={inReview > 0}
+              />
+            ) : null}
+            {canViewings ? (
+              <MetricLink
+                href="/lister/viewings"
+                label={requested ? `Viewings · ${requested} new` : "Viewings"}
+                value={viewings.length}
+                fresh={requested > 0}
+              />
+            ) : null}
+            {canDeals ? (
+              <MetricLink
+                href="/lister/deals"
+                label={awaiting ? `Deals · ${awaiting} waiting` : "Deals"}
+                value={deals.length}
+                fresh={awaiting > 0}
+              />
+            ) : null}
+          </MetricRow>
+        ) : null}
       </section>
-
-      {canList || canViewings || canDeals ? (
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 [&>:last-child:nth-child(odd)]:col-span-2 xl:[&>:last-child:nth-child(odd)]:col-span-1">
-          {canList ? (
-            <Stat
-              featured
-              href="/lister/listings"
-              icon={Building2}
-              label="Live listings"
-              value={String(published)}
-              hint={
-                inReview ? `${inReview} waiting for review` : "All reviewed"
-              }
-            />
-          ) : null}
-          {canViewings ? (
-            <Stat
-              href="/lister/viewings"
-              icon={CalendarCheck}
-              label="Viewings"
-              value={String(viewings.length)}
-              hint={
-                requested
-                  ? `${requested} new request${requested > 1 ? "s" : ""}`
-                  : "No new requests"
-              }
-            />
-          ) : null}
-          {canDeals ? (
-            <Stat
-              href="/lister/deals"
-              icon={Handshake}
-              label="Deals"
-              value={String(deals.length)}
-              hint={
-                awaiting ? `${awaiting} awaiting handover` : "Nothing waiting"
-              }
-            />
-          ) : null}
-        </div>
-      ) : null}
 
       <section className="flex flex-col gap-3">
         <h2 className="text-base font-semibold">Quick actions</h2>

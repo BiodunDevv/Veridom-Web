@@ -6,7 +6,6 @@ import { FormSkeleton } from "@/components/ui/page-skeletons"
 import { ListerHero, initialsOf } from "@/components/lister/lister-ui"
 import { Field, inputClass } from "@/components/site/field"
 import { Button } from "@/components/ui/button"
-import { PatternBg } from "@/components/ui/pattern-bg"
 import { usePermissions, useUpdateOrg } from "@/features/lister/org-hooks"
 
 export function ListerSettingsPage() {
@@ -110,7 +109,6 @@ export function ListerSettingsPage() {
               How customers see you
             </p>
             <div className="relative isolate overflow-hidden rounded-2xl bg-card p-5 shadow-md">
-              <PatternBg className="-z-10 [mask-image:linear-gradient(to_bottom,black,transparent_70%)] opacity-20 dark:opacity-40" />
               <span className="grid size-14 place-items-center rounded-2xl bg-primary text-lg font-semibold text-primary-foreground shadow-md">
                 {initialsOf(org?.name ?? "L")}
               </span>

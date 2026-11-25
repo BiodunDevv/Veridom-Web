@@ -1,8 +1,7 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
-import { Building2, Loader2, SearchX } from "lucide-react"
-import { PatternBg } from "@/components/ui/pattern-bg"
 
 import {
   ListingCard,
@@ -10,6 +9,7 @@ import {
 } from "@/components/listings/listing-card"
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
+import { Illustration } from "@/components/ui/illustration"
 import { useListingSearch } from "@/features/listings/hooks"
 import type { ListingFilters } from "@/features/listings/filters"
 
@@ -24,6 +24,27 @@ export function ListingGrid({
 }) {
   const query = useListingSearch(filters)
   const items = query.data?.pages.flatMap((page) => page.items) ?? []
+  const sentinel = React.useRef<HTMLDivElement>(null)
+  const {
+    hasNextPage,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+  } = query
+
+  // Load the next page on its own when the visitor nears the bottom.
+  React.useEffect(() => {
+    const el = sentinel.current
+    if (!el || !hasNextPage || isFetchNextPageError) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isFetchingNextPage) void fetchNextPage()
+      },
+      { rootMargin: "800px 0px" }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [fetchNextPage, hasNextPage, isFetchNextPageError, isFetchingNextPage])
 
   if (query.isPending) {
     return (
@@ -39,14 +60,10 @@ export function ListingGrid({
     return <RetryState label="listings" onRetry={() => query.refetch()} />
 
   if (items.length === 0) {
-    const Icon = hasFilters ? SearchX : Building2
     return (
-      <div className="relative overflow-hidden rounded-2xl bg-card px-6 py-14 text-center shadow-md">
-        <PatternBg className="opacity-25 dark:opacity-40" />
+      <div className="relative overflow-hidden rounded-2xl bg-card px-6 py-10 text-center shadow-md sm:py-12">
         <div className="relative mx-auto flex max-w-md flex-col items-center gap-4">
-          <span className="grid size-14 place-items-center rounded-2xl bg-primary/10 text-primary">
-            <Icon className="size-7" />
-          </span>
+          <Illustration name={hasFilters ? "search" : "listings"} size="lg" />
           <div className="flex flex-col gap-1.5">
             <p className="text-xl font-semibold tracking-tight">
               {hasFilters
@@ -89,18 +106,21 @@ export function ListingGrid({
           </div>
         ))}
       </div>
-      {query.hasNextPage ? (
-        <Button
-          variant="outline"
-          size="lg"
-          disabled={query.isFetchingNextPage}
-          onClick={() => query.fetchNextPage()}
-        >
-          {query.isFetchingNextPage ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : null}
-          Load more
-        </Button>
+      {isFetchingNextPage ? (
+        <div className="grid w-full gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <ListingCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : null}
+      {hasNextPage ? (
+        isFetchNextPageError ? (
+          <Button variant="outline" size="lg" onClick={() => fetchNextPage()}>
+            Couldn&apos;t load more. Try again
+          </Button>
+        ) : (
+          <div ref={sentinel} aria-hidden className="h-px w-full" />
+        )
       ) : (
         <p className="text-sm text-muted-foreground">
           You&apos;ve seen every match.
