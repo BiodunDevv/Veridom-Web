@@ -9,6 +9,19 @@ export const formatDate = (value?: string | null) =>
       })
     : "Not available"
 
+/**
+ * A calendar date with no clock time ("9 Dec 2026"). Move-in and tenancy dates
+ * come as plain dates, so reading them in Lagos time would add a false "01:00".
+ */
+export const formatCalendarDate = (value?: string | null) => {
+  if (!value) return "Not available"
+  const plain = /^\d{4}-\d{2}-\d{2}/.exec(value)?.[0]
+  return new Date(plain ? `${plain}T12:00:00Z` : value).toLocaleDateString(
+    "en-NG",
+    { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }
+  )
+}
+
 /** The API stores money as integer kobo (₦1 = 100 kobo). */
 export const formatNaira = (kobo?: number | null) =>
   typeof kobo === "number"

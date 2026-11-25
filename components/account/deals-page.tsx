@@ -22,7 +22,7 @@ import {
 import { RetryState } from "@/components/retry-state"
 import { Button } from "@/components/ui/button"
 import { useDeals } from "@/features/deals/hooks"
-import { formatDate, formatNaira } from "@/lib/format"
+import { formatCalendarDate, formatNaira } from "@/lib/format"
 
 export function DealsPage() {
   const dealsQuery = useDeals()
@@ -146,7 +146,7 @@ export function DealsPage() {
                       </p>
                       <p className="text-xs text-muted-foreground sm:text-sm">
                         {deal.moveInDate
-                          ? `Move-in ${formatDate(deal.moveInDate)}`
+                          ? `Move-in ${formatCalendarDate(deal.moveInDate)}`
                           : `Created ${timeAgo(deal.createdAt)}`}
                       </p>
                       <div className="mt-1.5 flex items-center gap-2 sm:hidden">

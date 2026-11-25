@@ -53,7 +53,13 @@ export function CustomerDock() {
           href: "/account/messages",
           badge: unreadChats,
         },
-        { label: "Deals", icon: Handshake, href: "/account/deals" },
+        {
+          label: "Deals",
+          icon: Handshake,
+          href: "/account/deals",
+          match: (p) =>
+            p.startsWith("/account/deals") || p.startsWith("/deals/"),
+        },
       ]}
       moreActive={(p) =>
         p === "/account" ||

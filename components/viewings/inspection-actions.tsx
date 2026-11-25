@@ -291,7 +291,13 @@ function availability(
         ? { state: "locked", hint: "Too close to the start to reschedule." }
         : ready
     case "respond":
-      return status === "CONFIRMED" && i.proposedStartsAt ? ready : null
+      // Only the side that did NOT propose the new time can answer it.
+      return status === "CONFIRMED" &&
+        i.proposedStartsAt &&
+        i.proposedBy &&
+        i.proposedBy !== (side === "customer" ? "CUSTOMER" : "LISTER")
+        ? ready
+        : null
     case "reassign":
       return status === "REQUESTED" || status === "CONFIRMED" ? ready : null
     case "checkin":

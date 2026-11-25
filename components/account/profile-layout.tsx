@@ -100,6 +100,7 @@ const TAB_PAGES = ["/account/viewings", "/account/messages", "/account/deals"]
  * pages (a deal, a viewing) already carry their own back link.
  */
 function MobileBackBar({ pathname }: { pathname: string }) {
+  if (!pathname.startsWith("/account")) return null
   const depth = pathname.split("/").filter(Boolean).length
   if (depth !== 2) return null
   // Viewings, chats and deals are tabs in the bottom bar: no "back" needed.

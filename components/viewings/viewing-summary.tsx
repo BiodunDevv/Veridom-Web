@@ -318,29 +318,42 @@ export function ViewingSummary({
         ]}
       />
 
-      {inspection.proposedStartsAt ? (
-        <div
-          role="status"
-          className="flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm sm:gap-3 sm:p-4"
-        >
-          <CalendarClock
-            className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400"
-            aria-hidden
-          />
-          <div>
-            <p className="font-semibold">A new time was proposed</p>
-            <p className="text-muted-foreground">
-              {lagos(inspection.proposedStartsAt, {
-                weekday: "long",
-                day: "numeric",
-                month: "long",
-              })}{" "}
-              at {formatTime(inspection.proposedStartsAt)}. Use Manage viewing
-              to answer.
-            </p>
-          </div>
-        </div>
-      ) : null}
+      {inspection.proposedStartsAt
+        ? (() => {
+            const mine =
+              inspection.proposedBy ===
+              (side === "customer" ? "CUSTOMER" : "LISTER")
+            const when = `${lagos(inspection.proposedStartsAt, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            })} at ${formatTime(inspection.proposedStartsAt)}`
+            const other = side === "customer" ? "the lister" : "the customer"
+            return (
+              <div
+                role="status"
+                className="flex items-start gap-2.5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm sm:gap-3 sm:p-4"
+              >
+                <CalendarClock
+                  className="mt-0.5 size-5 shrink-0 text-amber-600 dark:text-amber-400"
+                  aria-hidden
+                />
+                <div>
+                  <p className="font-semibold">
+                    {mine
+                      ? "Waiting for a reply to your new time"
+                      : "A new time was proposed"}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {mine
+                      ? `You suggested ${when}. We're waiting for ${other} to answer.`
+                      : `${when}. Use Manage viewing to answer.`}
+                  </p>
+                </div>
+              </div>
+            )
+          })()
+        : null}
 
       <Progress status={inspection.status} side={side} />
 

@@ -521,3 +521,13 @@ input:-webkit-autofill:focus {
     transform: translateX(100%);
   }
 }
+
+/* A bar that slides across its track while we wait for something. */
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}

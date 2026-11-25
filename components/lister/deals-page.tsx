@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog"
 import { useHandoverCode, useListerDeals } from "@/features/lister/ops-hooks"
 import { usePermissions } from "@/features/lister/org-hooks"
-import { formatDate, formatNaira } from "@/lib/format"
+import { formatCalendarDate, formatDate, formatNaira } from "@/lib/format"
 
 export function ListerDealsPage() {
   const { can } = usePermissions()
@@ -143,7 +143,7 @@ export function ListerDealsPage() {
                       </Link>
                       <p className="text-sm text-muted-foreground">
                         {deal.moveInDate
-                          ? `Move-in ${formatDate(deal.moveInDate)}`
+                          ? `Move-in ${formatCalendarDate(deal.moveInDate)}`
                           : `Created ${timeAgo(deal.createdAt)}`}
                       </p>
                     </div>

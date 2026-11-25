@@ -19,6 +19,9 @@ export type Deal = {
   listingId?: string
   moveInDate?: string
   holdExpiresAt?: string | null
+  paidAt?: string | null
+  handoverConfirmedAt?: string | null
+  completedAt?: string | null
   payKobo?: number
   totalKobo?: number
   commissionCustomerKobo?: number
@@ -50,6 +53,8 @@ export type Inspection = {
   endsAt?: string
   listingId?: string
   proposedStartsAt?: string | null
+  /** Who suggested the pending new time; the other side is the one to answer. */
+  proposedBy?: "CUSTOMER" | "LISTER" | null
   listing?: { id?: string; title?: string; addressLine?: string } | null
   listingTitle?: string
   /** Null until the viewing is confirmed. */

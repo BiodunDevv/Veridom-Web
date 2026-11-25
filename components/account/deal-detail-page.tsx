@@ -4,7 +4,14 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMutation } from "@tanstack/react-query"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import {
+  ArrowLeft,
+  CalendarCheck,
+  KeyRound,
+  Loader2,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { BankAccountForm } from "@/components/account/bank-account-form"
@@ -19,6 +26,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp"
 import { DetailSkeleton } from "@/components/ui/page-skeletons"
+import { PatternBg } from "@/components/ui/pattern-bg"
 import {
   useCancelDeal,
   useCheckout,
@@ -30,10 +38,20 @@ import {
 import { formatCountdown, useCountdown } from "@/hooks/use-countdown"
 import { getApiErrorMessage } from "@/lib/api/client"
 import { dealsApi, type Deal } from "@/lib/api/deals"
-import { formatDate, formatNaira } from "@/lib/format"
+import { formatCalendarDate, formatDate, formatNaira } from "@/lib/format"
 import { cn } from "@/lib/utils"
 
 const HOLD_MS = 30 * 60_000
+const DAY_MS = 86_400_000
+
+/** Unsplash photos that suit each stage of a deal. */
+const photo = (id: string, width = 900) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=70`
+const IMAGES = {
+  pay: "photo-1556742049-0cfed4f6a45d", // paying with a phone at a counter
+  keys: "photo-1560518883-ce09059eeffa", // keys beside a model home
+  papers: "photo-1450101499163-c8848c66ca85", // signing papers
+}
 const STEPS = ["Reserved", "Paid", "Move-in", "Done"]
 const ENDED: Record<string, string> = {
   EXPIRED: "The hold ended before payment was made.",
@@ -43,17 +61,59 @@ const ENDED: Record<string, string> = {
   DISPUTED: "A problem was reported. The payout is paused while we review.",
 }
 
+const CHANNELS: Record<string, string> = {
+  bank_transfer: "bank transfer",
+  card: "card",
+  ussd: "USSD",
+  bank: "bank",
+  mobile_money: "mobile money",
+}
+
+/** A neat rounded picture at the top of a card, with a small caption. */
+function Photo({ id, caption }: { id: string; caption?: string }) {
+  const [failed, setFailed] = React.useState(false)
+  if (failed) return null
+  return (
+    <div className="relative h-32 overflow-hidden rounded-xl bg-muted sm:h-40">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={photo(id)}
+        alt=""
+        loading="lazy"
+        onError={() => setFailed(true)}
+        className="size-full object-cover"
+      />
+      <span className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+      {caption ? (
+        <span className="absolute bottom-2.5 left-2.5 rounded-full bg-background/85 px-2.5 py-1 text-xs font-semibold backdrop-blur">
+          {caption}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function Card({
   title,
+  image,
+  caption,
   children,
 }: {
   title?: string
+  /** An Unsplash photo id shown at the top of the card. */
+  image?: string
+  caption?: string
   children: React.ReactNode
 }) {
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border sm:p-6">
-      {title ? <h2 className="text-base font-semibold">{title}</h2> : null}
-      {children}
+    <section className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm ring-1 ring-border sm:p-5">
+      {image ? <Photo id={image} caption={caption} /> : null}
+      <div className="flex flex-col gap-4 sm:px-1">
+        {title ? (
+          <h2 className="text-base font-semibold sm:text-lg">{title}</h2>
+        ) : null}
+        {children}
+      </div>
     </section>
   )
 }
@@ -121,7 +181,11 @@ function PayCard({ deal }: { deal: Deal }) {
   const pct = Math.min(100, Math.max(0, ((left * 1000) / HOLD_MS) * 100))
 
   return (
-    <Card title="Complete your payment">
+    <Card
+      title="Complete your payment"
+      image={IMAGES.pay}
+      caption="Secure payment"
+    >
       <div className="flex flex-col gap-2">
         <p className="flex items-baseline justify-between text-sm text-muted-foreground">
           {left > 0 ? "Held for you" : "The hold is ending"}
@@ -173,35 +237,83 @@ function PayCard({ deal }: { deal: Deal }) {
 function MoveInCard({ deal }: { deal: Deal }) {
   const [code, setCode] = React.useState("")
   const confirm = useConfirmMoveIn(deal.id)
+  // Without a code the deal completes by itself 72 hours after move-in.
+  const autoDone = deal.moveInDate
+    ? new Date(
+        Date.parse(deal.moveInDate.slice(0, 10) + "T12:00:00Z") + 3 * DAY_MS
+      )
+    : null
 
   return (
-    <Card title="Move-in handover">
-      <p className="text-sm text-muted-foreground">
-        Only enter this code after you have the keys and have seen the property.
-        Veridom never asks for it.
+    <Card
+      title="Move-in handover"
+      image={IMAGES.keys}
+      caption="Keys on move-in day"
+    >
+      <div className="flex flex-col gap-3 rounded-xl bg-muted/50 p-4">
+        <p className="text-sm font-semibold">Where do I get the code?</p>
+        <ol className="flex flex-col gap-2.5 text-sm text-muted-foreground">
+          {[
+            [CalendarCheck, "Meet the lister at the property on move-in day."],
+            [
+              UserRound,
+              "They create a 6-digit code in their Veridom account and show it to you. It's valid for 24 hours.",
+            ],
+            [
+              KeyRound,
+              "Once you have the keys and have seen the property, enter it below.",
+            ],
+          ].map(([Icon, text], i) => {
+            const I = Icon as typeof KeyRound
+            return (
+              <li key={i} className="flex items-start gap-3">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                  <I className="size-3.5" aria-hidden />
+                </span>
+                <span className="pt-0.5 leading-snug">{text as string}</span>
+              </li>
+            )
+          })}
+        </ol>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <InputOTP
+          maxLength={6}
+          value={code}
+          onChange={setCode}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          aria-label="6-digit handover code"
+        >
+          <InputOTPGroup>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <InputOTPSlot key={i} index={i} className="size-11 text-lg" />
+            ))}
+          </InputOTPGroup>
+        </InputOTP>
+        <Button
+          disabled={code.length !== 6 || confirm.isPending}
+          onClick={() => confirm.mutate(code, { onSettled: () => setCode("") })}
+          className="self-start"
+        >
+          {confirm.isPending ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : null}
+          Confirm move-in
+        </Button>
+      </div>
+
+      <p className="flex items-start gap-2 text-xs text-muted-foreground">
+        <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-primary" />
+        <span>
+          Only enter the code after you have the keys. Veridom never asks for
+          it. No code?{" "}
+          {autoDone
+            ? `The deal completes by itself on ${formatCalendarDate(autoDone.toISOString())} unless you report a problem.`
+            : "The deal completes by itself 72 hours after move-in unless you report a problem."}
+        </span>
       </p>
-      <InputOTP
-        maxLength={6}
-        value={code}
-        onChange={setCode}
-        inputMode="numeric"
-        pattern="[0-9]*"
-        aria-label="6-digit handover code"
-      >
-        <InputOTPGroup>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <InputOTPSlot key={i} index={i} className="size-11 text-lg" />
-          ))}
-        </InputOTPGroup>
-      </InputOTP>
-      <Button
-        disabled={code.length !== 6 || confirm.isPending}
-        onClick={() => confirm.mutate(code, { onSettled: () => setCode("") })}
-        className="self-start"
-      >
-        {confirm.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-        Confirm move-in
-      </Button>
     </Card>
   )
 }
@@ -268,14 +380,15 @@ export function DealDetailPage({ id }: { id: string }) {
         <ArrowLeft className="size-4" /> All deals
       </Link>
 
-      <header className="flex flex-col gap-1.5">
+      <header className="relative isolate flex flex-col gap-1.5 overflow-hidden rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border sm:p-6">
+        <PatternBg className="-z-10 [mask-image:linear-gradient(to_left,black,transparent_80%)]" />
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <StatusBadge status={status} />
         </div>
         {deal.moveInDate ? (
           <p className="text-sm text-muted-foreground">
-            Move-in {formatDate(deal.moveInDate)}
+            Move-in {formatCalendarDate(deal.moveInDate)}
           </p>
         ) : null}
       </header>
@@ -308,7 +421,7 @@ export function DealDetailPage({ id }: { id: string }) {
             </Card>
           ) : null}
           {status === "COMPLETED" ? (
-            <Card title="Staying on?">
+            <Card title="Staying on?" image={IMAGES.papers} caption="Renewal">
               <p className="text-sm text-muted-foreground">
                 Renew to pay the next rent and recurring fees.
               </p>
@@ -350,6 +463,11 @@ export function DealDetailPage({ id }: { id: string }) {
                   {formatDate(deal.tenancyEnd)}
                 </Row>
               ) : null}
+              {deal.rentPeriod ? (
+                <Row label="Rent">
+                  Per {deal.rentPeriod === "MONTH" ? "month" : "year"}
+                </Row>
+              ) : null}
               <div className="my-1 border-t" />
               <Row label="Rental total">{formatNaira(deal.totalKobo)}</Row>
               {deal.commissionCustomerKobo ? (
@@ -360,6 +478,14 @@ export function DealDetailPage({ id }: { id: string }) {
               <Row label="You pay" strong>
                 {formatNaira(deal.payKobo ?? deal.totalKobo)}
               </Row>
+              {deal.paidAt ? (
+                <Row label="Paid">
+                  {formatDate(deal.paidAt)}
+                  {deal.payment?.channel
+                    ? ` · ${CHANNELS[deal.payment.channel] ?? deal.payment.channel.replace("_", " ")}`
+                    : ""}
+                </Row>
+              ) : null}
             </dl>
           </Card>
 
